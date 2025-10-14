@@ -150,3 +150,28 @@ fn BinaryOp::precedence(self : Self) -> Int {
   }
 }
 
+fn parse_expr_list(
+  tokens : ArrayView[Token],
+) -> (Array[Expr], ArrayView[Token]) raise ParseError {
+  let exprs : Array[Expr] = Array::new()
+  let tokens = loop tokens {
+    [{ kind: Bracket(')') }, ..] as tokens => break tokens
+    [{ kind: Symbol(",") }, { kind: Bracket(')') }, ..] as tokens =>
+      break tokens[1:]
+    [{ kind: Symbol(",") }, .. tokens] => {
+      let (expr, rest) = parse_expr(tokens)
+      exprs.push(expr)
+      continue rest
+    }
+    [] => {
+      println("Compiler ICE: Empty Token ArrayView")
+      panic()
+    }
+    tokens => {
+      let (expr, rest) = parse_expr(tokens)
+      exprs.push(expr)
+      continue rest
+    }
+  }
+  (exprs, tokens)
+}
