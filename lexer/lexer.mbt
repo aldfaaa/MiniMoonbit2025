@@ -120,7 +120,7 @@ pub fn tokenize(code : String) -> Array[Token] raise TokenizeError {
           [] as rest_str => break rest_str
         }
     [.. "::", .. rest] => {
-      let tok = Token::new(Symbol(":"))
+      let tok = Token::new(Symbol("::"))
       tokens.push(tok)
       continue rest
     }

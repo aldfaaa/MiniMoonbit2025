@@ -5,11 +5,12 @@ pub(all) enum Either[L, R] {
 } derive(Show, Eq)
 
 pub(all) struct IfExpr {
-  lineno : Int
-  column : Int
-  end_lineno : Int
-  end_column : Int
   cond : Expr
   then_block : BlockExpr
   else_block : Either[IfExpr, BlockExpr]?
 } derive(Show, Eq)
+
+pub fn parse_if_expr(tokens: ArrayView[Token]) -> (IfExpr, ArrayView[Token]) raise ParseError {
+  ignore(tokens)
+  ...
+}
