@@ -8,6 +8,7 @@ pub(all) enum AtomExprKind {
   Int(Int) // 1, 42, etc
   Double(Double) // 1.0, 3.14, etc
   Bool(Bool) // true | false
+  String(String) // "hello", etc
   Ident(String) // var
   Unit // ()
   Paren(Expr) // (expr)
@@ -22,21 +23,25 @@ pub fn parse_atom_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
   match tokens {
-    [{ kind: Int(v) }, ..] => {
+    [{ kind: Int(v) }, ..tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Int(v) }
-      (expr, tokens[1:])
+      (expr, tokens)
     }
-    [{ kind: Double(v) }, ..] => {
+    [{ kind: Double(v) }, ..tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Double(v) }
-      (expr, tokens[1:])
+      (expr, tokens)
     }
-    [{ kind: Bool(v) }, ..] => {
+    [{ kind: Bool(v) }, ..tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Bool(v) }
-      (expr, tokens[1:])
+      (expr, tokens)
     }
-    [{ kind: Lower(ident) }, ..] => {
+    [{ kind: String(s) }, ..tokens] => {
+      let expr = AtomExpr::{ kind: AtomExprKind::String(s) }
+      (expr, tokens)
+    }
+    [{ kind: Lower(ident) }, ..tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Ident(ident) }
-      (expr, tokens[1:])
+      (expr, tokens)
     }
     [{ kind: Upper("Array") }, ..] as tokens => parse_array_make_expr(tokens)
     [{ kind: Upper(_) }, ..] as tokens =>

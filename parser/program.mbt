@@ -70,7 +70,11 @@ test "Parse Program Test" {
     #|  let r = Rectangle::{ a: 3.0, b: 4.0, c: 5.0 };
     #|  let ac = area_circle(c);
     #|  let ar = area_rectangle(r);
-    #|  if ac > ar { print_int(1); } else { print_int(0); };
+    #|  if ac > ar {
+    #|    print_str("Circle area is larger");
+    #|  } else {
+    #|    print_str("Rectangle area is larger");
+    #|  };
     #|}
   
 

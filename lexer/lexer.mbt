@@ -5,16 +5,13 @@ pub suberror TokenizeError String derive(Show)
 pub(all) enum Keyword {
   Fn
   Struct
-  Enum
   Let
   Mut
   If
   Else
-  Match
   While
   For
   Return
-  Extern
 } derive(Show, Eq)
 
 ///|
@@ -304,6 +301,11 @@ pub fn tokenize(code : String) -> Array[Token] raise TokenizeError {
       tokens.push(tok)
       continue rest
     }
+    ['\"', ..] as code => {
+      let (tok, rest) = tokenize_string(code)
+      tokens.push(tok)
+      continue rest
+    }
     ['A'..='Z', ..] as code => {
       let sb = StringBuilder::new()
       let rest = loop code {
@@ -349,18 +351,15 @@ fn tokenize_lower_ident(code : StringView) -> (TokenKind, StringView) {
   let kind = match ident {
     "fn" => Keyword(Fn)
     "struct" => Keyword(Struct)
-    "enum" => Keyword(Enum)
     "let" => Keyword(Let)
     "mut" => Keyword(Mut)
     "if" => Keyword(If)
     "else" => Keyword(Else)
-    "match" => Keyword(Match)
     "while" => Keyword(While)
     "for" => Keyword(For)
     "return" => Keyword(Return)
     "true" => Bool(true)
     "false" => Bool(false)
-    "extern" => Keyword(Extern)
     "_" => Wildcard
     _ => Lower(ident)
   }
@@ -424,4 +423,31 @@ fn tokenize_number(
     (TokenKind::Int(value), rest)
   }
   (Token::new(kind), rest)
+}
+
+fn tokenize_string(
+  code : StringView,
+) -> (Token, StringView) raise TokenizeError {
+  guard code is ['\"', .. code] else {
+    println(
+      "Compiler ICE: Tokenize String Error",
+    )
+    panic()
+  }
+  let sb = StringBuilder::new()
+  let rest = loop code {
+    ['\"', .. rest] => {
+      break rest
+    }
+    [c, .. rest] => {
+      sb.write_char(c)
+      continue rest
+    }
+    [] =>
+      raise TokenizeError(
+        "Tokenize Error: Unterminated string literal",
+      )
+  }
+  let str_val = sb.to_string()
+  (Token::new(String(str_val)), rest)
 }
