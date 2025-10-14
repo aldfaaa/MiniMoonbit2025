@@ -1,6 +1,6 @@
-
+///|
 test "Binary Expr Parsing Test" {
-  let code = 
+  let code =
     #|1 + 2 * 3 ;
     #|4 * 5 - 6 / 2 ;
     #|a && b || c && d ;
@@ -19,7 +19,7 @@ test "Binary Expr Parsing Test" {
     atom.kind is Int(2) &&
     right.kind is ApplyExpr(a) &&
     a.kind is AtomExpr(atom) &&
-    atom.kind is Int(3)
+    atom.kind is Int(3),
   )
   let (e, tok_view) = parse_expr(tok_view[1:])
   assert_true(
@@ -37,7 +37,7 @@ test "Binary Expr Parsing Test" {
     atom.kind is Int(6) &&
     right3.kind is ApplyExpr(a) &&
     a.kind is AtomExpr(atom) &&
-    atom.kind is Int(2)
+    atom.kind is Int(2),
   )
   let (e, tok_view) = parse_expr(tok_view[1:])
   assert_true(
@@ -55,7 +55,7 @@ test "Binary Expr Parsing Test" {
     atom.kind is Ident("c") &&
     right3.kind is ApplyExpr(a) &&
     a.kind is AtomExpr(atom) &&
-    atom.kind is Ident("d")
+    atom.kind is Ident("d"),
   )
   let (e, tok_view) = parse_expr(tok_view[1:])
   assert_true(
@@ -73,7 +73,7 @@ test "Binary Expr Parsing Test" {
     atom.kind is Ident("y") &&
     right1.kind is ApplyExpr(a) &&
     a.kind is AtomExpr(atom) &&
-    atom.kind is Int(3)
+    atom.kind is Int(3),
   )
   let (e, _) = parse_expr(tok_view[1:])
   assert_true(
@@ -91,6 +91,6 @@ test "Binary Expr Parsing Test" {
     atom.kind is Ident("r") &&
     right3.kind is ApplyExpr(a) &&
     a.kind is AtomExpr(atom) &&
-    atom.kind is Ident("s")
+    atom.kind is Ident("s"),
   )
 }

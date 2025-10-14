@@ -1,4 +1,3 @@
-
 ///|
 test "Tokenize Float Number" {
   let code =
@@ -13,5 +12,3 @@ test "Tokenize Float Number" {
   assert_true(tokens[5].kind is Double(42.0))
   assert_true(tokens[6].kind is EOF)
 }
-
-

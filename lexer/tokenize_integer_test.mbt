@@ -13,4 +13,3 @@ test "Tokenize Int Number" {
   assert_true(tokens[6].kind is Int(12))
   assert_true(tokens[7].kind is EOF)
 }
-

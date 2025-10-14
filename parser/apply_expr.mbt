@@ -1,3 +1,4 @@
+///|
 pub(all) struct ApplyExpr {
   kind : ApplyExprKind
 } derive(Show, Eq)
@@ -15,9 +16,7 @@ pub fn parse_apply_expr(
   tokens : ArrayView[Token],
 ) -> (ApplyExpr, ArrayView[Token]) raise ParseError {
   let (atom_expr, tokens) = parse_atom_expr(tokens)
-  let apply_expr = ApplyExpr::{
-    kind: ApplyExprKind::AtomExpr(atom_expr),
-  }
+  let apply_expr = ApplyExpr::{ kind: ApplyExprKind::AtomExpr(atom_expr) }
   if !(tokens is [{ kind: Bracket('[') | Symbol(".") | Bracket('(') }, ..]) {
     return (apply_expr, tokens)
   }
@@ -44,12 +43,9 @@ pub fn parse_apply_expr(
       guard tokens is [{ kind: Bracket(')') }, .. tokens] else {
         raise ParseError("Expect ')'")
       }
-      apply_expr = ApplyExpr::{
-        kind: ApplyExprKind::Call(apply_expr, args),
-      }
+      apply_expr = ApplyExpr::{ kind: ApplyExprKind::Call(apply_expr, args) }
       continue tokens
     }
     tokens => break (apply_expr, tokens)
   }
 }
-

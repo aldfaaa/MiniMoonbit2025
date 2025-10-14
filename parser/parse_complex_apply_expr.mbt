@@ -1,11 +1,9 @@
-
-
+///|
 test "Complex Apply Expr Parsing Test" {
   let code =
     #|obj.field1[0].method(a1, b2) ;
     #|matrix[1][2].to_string() ;
     #|arr[3](5)[7]
-
   let tokens = @lexer.tokenize(code)
   let (a, tok_view) = parse_apply_expr(tokens[:])
   assert_true(
@@ -25,7 +23,7 @@ test "Complex Apply Expr Parsing Test" {
     array_access.kind is FieldAccess(field_access, field_name) &&
     field_name is "field1" &&
     field_access.kind is AtomExpr(atom_obj) &&
-    atom_obj.kind is Ident("obj")
+    atom_obj.kind is Ident("obj"),
   )
   let (a, tok_view) = parse_apply_expr(tok_view[1:])
   assert_true(
@@ -41,7 +39,7 @@ test "Complex Apply Expr Parsing Test" {
     index_apply1.kind is AtomExpr(index_atom1) &&
     index_atom1.kind is Int(1) &&
     array_access1.kind is AtomExpr(atom_matrix) &&
-    atom_matrix.kind is Ident("matrix")
+    atom_matrix.kind is Ident("matrix"),
   )
   let (a, _) = parse_apply_expr(tok_view[1:])
   assert_true(
@@ -58,7 +56,6 @@ test "Complex Apply Expr Parsing Test" {
     index_apply4.kind is AtomExpr(index_atom4) &&
     index_atom4.kind is Int(3) &&
     array_access4.kind is AtomExpr(atom_arr) &&
-    atom_arr.kind is Ident("arr")
+    atom_arr.kind is Ident("arr"),
   )
-
 }

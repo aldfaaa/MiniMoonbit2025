@@ -9,4 +9,3 @@ pub(all) enum LeftValueKind {
   ArrayAccess(LeftValue, Expr)
   FieldAccess(LeftValue, String)
 } derive(Show, Eq)
-

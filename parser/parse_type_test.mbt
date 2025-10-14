@@ -13,8 +13,9 @@ test "Simple Type Parsing" {
   assert_true(ty.kind is Double)
 }
 
+///|
 test "Complex Type Parsing" {
-  let code = 
+  let code =
     #|Array[Int]
     #|(Int, Double) 
     #|() -> Double
@@ -23,7 +24,6 @@ test "Complex Type Parsing" {
     #|Array[(Int, Double)]
     #|Array[() -> Double]
     #|Array[((Int, Double), Unit)]
-
   let tokens = @lexer.tokenize(code)
   let (ty, tok_view) = parse_type(tokens[:])
   assert_true(ty.kind is Array(Int))
@@ -42,4 +42,3 @@ test "Complex Type Parsing" {
   let (ty, _) = parse_type(tok_view)
   assert_true(ty.kind is Array(Tuple([Tuple([Int, Double]), Unit])))
 }
-

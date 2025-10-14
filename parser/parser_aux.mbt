@@ -1,4 +1,3 @@
-
 ///|
 typealias @lexer.Token
 

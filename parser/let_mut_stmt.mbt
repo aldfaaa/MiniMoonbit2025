@@ -1,3 +1,4 @@
+///|
 pub(all) struct LetMutStmt {
   lineno : Int
   column : Int
@@ -7,4 +8,3 @@ pub(all) struct LetMutStmt {
   ty : Type?
   expr : Expr
 } derive(Show, Eq)
-

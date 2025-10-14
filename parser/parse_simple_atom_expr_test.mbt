@@ -1,4 +1,4 @@
-
+///|
 test "Simple AtomExpr Parsing Test" {
   let code =
     #|42 3.14 true false
@@ -17,4 +17,3 @@ test "Simple AtomExpr Parsing Test" {
   let (a, _) = parse_atom_expr(tok_view)
   assert_true(a.kind is Ident("bar"))
 }
-

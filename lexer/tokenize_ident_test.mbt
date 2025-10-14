@@ -27,4 +27,3 @@ test "Tokenize Identifiers - 2" {
   assert_true(tokens[7].kind is Lower("enum2"))
   assert_true(tokens[8].kind is EOF)
 }
-

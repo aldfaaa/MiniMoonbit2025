@@ -1,0 +1,92 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/MiniMoonbit/lexer"
+
+// Values
+fn tokenize(String) -> Array[Token] raise TokenizeError
+
+// Errors
+pub suberror TokenizeError String
+impl Show for TokenizeError
+
+// Types and methods
+pub(all) enum AssignOp {
+  Assign
+  PlusAssign
+  MinusAssign
+  MultAssign
+  DivAssign
+  ModAssign
+}
+impl Eq for AssignOp
+impl Show for AssignOp
+impl ToJson for AssignOp
+
+pub(all) enum BinaryOp {
+  Add
+  Sub
+  Mul
+  Div
+  Mod
+  ShiftLeft
+  ShiftRight
+  Eq
+  NE
+  LT
+  GT
+  LE
+  GE
+  And
+  Or
+  BitAnd
+  BitOr
+}
+impl Eq for BinaryOp
+impl Show for BinaryOp
+
+pub(all) enum Keyword {
+  Fn
+  Struct
+  Enum
+  Let
+  Mut
+  If
+  Else
+  Match
+  While
+  For
+  Return
+  Extern
+}
+impl Eq for Keyword
+impl Show for Keyword
+
+pub struct Token {
+  kind : TokenKind
+}
+fn Token::new(TokenKind) -> Self
+impl Eq for Token
+impl Show for Token
+
+pub(all) enum TokenKind {
+  Bool(Bool)
+  Int(Int)
+  Double(Double)
+  String(String)
+  Keyword(Keyword)
+  Upper(String)
+  Lower(String)
+  BinaryOp(BinaryOp)
+  AssignOp(AssignOp)
+  Not
+  Bracket(Char)
+  Symbol(String)
+  Wildcard
+  EOF
+}
+impl Eq for TokenKind
+impl Show for TokenKind
+
+// Type aliases
+
+// Traits
+

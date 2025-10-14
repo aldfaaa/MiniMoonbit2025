@@ -38,5 +38,3 @@ test "Tokenize Assignment Operators" {
   assert_true(tokens[5].kind is AssignOp(ModAssign))
   assert_true(tokens[6].kind is EOF)
 }
-
-

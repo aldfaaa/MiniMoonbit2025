@@ -98,4 +98,3 @@ fn parse_array_type(
   }
   (Type::{ kind: Array(elem_ty.kind) }, rest)
 }
-

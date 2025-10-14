@@ -1,4 +1,4 @@
-
+///|
 test "Parse Simple Apply Expr Test" {
   let code =
     #|42 3.14 true false

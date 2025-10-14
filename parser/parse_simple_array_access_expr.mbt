@@ -1,8 +1,8 @@
+///|
 test "Simple Array Access Parsing Test" {
-  let code = 
+  let code =
     #|arr[42]
     #|matrix[3][4]
-
   let tokens = @lexer.tokenize(code)
   let (a, tok_view) = parse_apply_expr(tokens[:])
   assert_true(
@@ -11,7 +11,7 @@ test "Simple Array Access Parsing Test" {
     app_index.kind is AtomExpr(atom_index) &&
     atom_index.kind is Int(42) &&
     arr_access.kind is ApplyExprKind::AtomExpr(atom_arr) &&
-    atom_arr.kind is AtomExprKind::Ident("arr")
+    atom_arr.kind is AtomExprKind::Ident("arr"),
   )
   let (a, _) = parse_apply_expr(tok_view)
   assert_true(
@@ -24,8 +24,6 @@ test "Simple Array Access Parsing Test" {
     app_index1.kind is AtomExpr(atom_index1) &&
     atom_index1.kind is Int(3) &&
     arr_access1.kind is ApplyExprKind::AtomExpr(atom_arr) &&
-    atom_arr.kind is AtomExprKind::Ident("matrix")
+    atom_arr.kind is AtomExprKind::Ident("matrix"),
   )
 }
-
-

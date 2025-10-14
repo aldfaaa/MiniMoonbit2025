@@ -20,5 +20,3 @@ test "Tokenize Symbols" {
   assert_true(tokens[13].kind is Wildcard)
   assert_true(tokens[14].kind is EOF)
 }
-
-

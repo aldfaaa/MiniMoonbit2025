@@ -1,0 +1,248 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "username/MiniMoonbit/parser"
+
+import(
+  "username/MiniMoonbit/lexer"
+)
+
+// Values
+fn parse_apply_expr(ArrayView[@lexer.Token]) -> (ApplyExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_atom_expr(ArrayView[@lexer.Token]) -> (AtomExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_block_expr(ArrayView[@lexer.Token]) -> (BlockExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_expr(ArrayView[@lexer.Token]) -> (Expr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_if_expr(ArrayView[@lexer.Token]) -> (IfExpr, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_pattern(ArrayView[@lexer.Token]) -> (Pattern, ArrayView[@lexer.Token]) raise ParseError
+
+fn parse_type(ArrayView[@lexer.Token]) -> (Type, ArrayView[@lexer.Token]) raise ParseError
+
+// Errors
+pub suberror ParseError String
+impl Show for ParseError
+
+// Types and methods
+pub(all) struct ApplyExpr {
+  kind : ApplyExprKind
+}
+impl Eq for ApplyExpr
+impl Show for ApplyExpr
+
+pub(all) enum ApplyExprKind {
+  AtomExpr(AtomExpr)
+  ArrayAccess(ApplyExpr, Expr)
+  FieldAccess(ApplyExpr, String)
+  Call(ApplyExpr, Array[Expr])
+}
+impl Eq for ApplyExprKind
+impl Show for ApplyExprKind
+
+pub(all) enum AssignOp {
+  Assign
+  PlusAssign
+  MinusAssign
+  MultAssign
+  DivAssign
+  ModAssign
+}
+impl Eq for AssignOp
+impl Show for AssignOp
+
+pub(all) struct AssignStmt {
+  left_value : LeftValue
+  op : AssignOp
+  expr : Expr
+}
+impl Eq for AssignStmt
+impl Show for AssignStmt
+
+pub(all) struct AtomExpr {
+  kind : AtomExprKind
+}
+impl Eq for AtomExpr
+impl Show for AtomExpr
+
+pub(all) enum AtomExprKind {
+  Int(Int)
+  Double(Double)
+  Bool(Bool)
+  Ident(String)
+  Unit
+  Paren(Expr)
+  Tuple(Array[Expr])
+  Array(Array[Expr])
+  ArrayMake(Expr, Expr)
+  StructConstruct(String, Array[(String, Expr)])
+}
+impl Eq for AtomExprKind
+impl Show for AtomExprKind
+
+pub(all) enum BinaryOp {
+  Add
+  Sub
+  Mul
+  Div
+  Mod
+  ShiftLeft
+  ShiftRight
+  Eq
+  NE
+  LT
+  GT
+  LE
+  GE
+  And
+  Or
+  BitAnd
+  BitOr
+}
+fn BinaryOp::from_tok_binary_op(@lexer.BinaryOp) -> Self
+impl Eq for BinaryOp
+impl Show for BinaryOp
+
+pub(all) struct BlockExpr {
+  stmts : Array[Stmt]
+}
+impl Eq for BlockExpr
+impl Show for BlockExpr
+
+pub(all) enum Either[L, R] {
+  Left(L)
+  Right(R)
+}
+impl[L : Eq, R : Eq] Eq for Either[L, R]
+impl[L : Show, R : Show] Show for Either[L, R]
+
+pub(all) struct Expr {
+  kind : ExprKind
+}
+impl Eq for Expr
+impl Show for Expr
+
+pub(all) enum ExprKind {
+  ApplyExpr(ApplyExpr)
+  BlockExpr(BlockExpr)
+  NotExpr(Expr)
+  NegExpr(Expr)
+  BinaryExpr(BinaryOp, Expr, Expr)
+  IfExpr(IfExpr)
+}
+impl Eq for ExprKind
+impl Show for ExprKind
+
+pub(all) struct IfExpr {
+  cond : Expr
+  then_block : BlockExpr
+  else_block : Either[IfExpr, BlockExpr]?
+}
+impl Eq for IfExpr
+impl Show for IfExpr
+
+pub(all) struct LeftValue {
+  kind : LeftValueKind
+}
+impl Eq for LeftValue
+impl Show for LeftValue
+
+pub(all) enum LeftValueKind {
+  Ident(String)
+  ArrayAccess(LeftValue, Expr)
+  FieldAccess(LeftValue, String)
+}
+impl Eq for LeftValueKind
+impl Show for LeftValueKind
+
+pub(all) struct LetMutStmt {
+  lineno : Int
+  column : Int
+  end_lineno : Int
+  end_column : Int
+  name : String
+  ty : Type?
+  expr : Expr
+}
+impl Eq for LetMutStmt
+impl Show for LetMutStmt
+
+pub(all) struct LetStmt {
+  pattern : Pattern
+  ty : TypeKind?
+  expr : Expr
+}
+impl Eq for LetStmt
+impl Show for LetStmt
+
+pub(all) struct Pattern {
+  kind : PatternKind
+}
+impl Eq for Pattern
+impl Show for Pattern
+
+pub(all) enum PatternKind {
+  Wildcard
+  Ident(String)
+  Tuple(Array[Pattern])
+}
+impl Eq for PatternKind
+impl Show for PatternKind
+
+pub(all) struct Stmt {
+  lineno : Int
+  column : Int
+  end_lineno : Int
+  end_column : Int
+  kind : StmtKind
+}
+impl Eq for Stmt
+impl Show for Stmt
+
+pub(all) enum StmtKind {
+  LetStmt(LetStmt)
+  LetMutStmt(LetMutStmt)
+  AssignStmt(AssignStmt)
+  WhileStmt(WhileStmt)
+  ExprStmt(Expr)
+  ReturnStmt(Expr?)
+}
+impl Eq for StmtKind
+impl Show for StmtKind
+
+pub struct Type {
+  kind : TypeKind
+}
+impl Eq for Type
+impl Show for Type
+
+pub(all) enum TypeKind {
+  Unit
+  Bool
+  Int
+  Int64
+  UInt
+  UInt64
+  Float
+  Double
+  String
+  Tuple(Array[TypeKind])
+  Array(TypeKind)
+  Function(Array[TypeKind], TypeKind)
+  Defined(String)
+}
+impl Eq for TypeKind
+impl Hash for TypeKind
+impl Show for TypeKind
+
+pub(all) struct WhileStmt {
+  cond : Expr
+  body : BlockExpr
+}
+impl Eq for WhileStmt
+impl Show for WhileStmt
+
+// Type aliases
+
+// Traits
+
