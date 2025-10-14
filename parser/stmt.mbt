@@ -33,14 +33,14 @@ pub fn parse_stmt(
       (stmt, rest)
     }
     [{ kind: Keyword(Return) }, .. tokens] => {
-      let (expr, rest) = if tokens is [{ kind: Symbol(";")}, ..] {
+      let (expr, rest) = if tokens is [{ kind: Symbol(";")}, ..tokens] {
         (None, tokens)
       } else {
-        let (expr, rest) = parse_expr(tokens)
-        guard tokens is [{ kind: Symbol(";")}, ..] else {
+        let (expr, tokens) = parse_expr(tokens)
+        guard tokens is [{ kind: Symbol(";")}, ..tokens] else {
           raise ParseError("Expected ';' after return expression")
         }
-        (Some(expr), rest)
+        (Some(expr), tokens)
       }
       let stmt = Stmt::{
         kind: StmtKind::ReturnStmt(expr),
@@ -66,7 +66,7 @@ pub fn parse_stmt(
         let stmt = Stmt::{
           kind: StmtKind::ExprStmt(expr),
         }
-        guard rest is [{ kind: Symbol(";")}, ..] else {
+        guard rest is [{ kind: Symbol(";")}, ..rest] else {
           raise ParseError("Expected ';' after expression statement")
         }
         (stmt, rest)
@@ -88,7 +88,7 @@ pub fn parse_stmt(
       let stmt = Stmt::{
         kind: StmtKind::ExprStmt(expr),
       }
-      guard rest is [{ kind: Symbol(";")}, ..] else {
+      guard rest is [{ kind: Symbol(";")}, ..rest] else {
         raise ParseError("Expected ';' after expression statement")
       }
       (stmt, rest)

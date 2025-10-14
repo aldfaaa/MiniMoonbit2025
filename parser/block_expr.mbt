@@ -22,13 +22,7 @@ pub fn parse_block_expr(
     tokens => {
       let (stmt, tokens) = parse_stmt(tokens)
       stmts.push(stmt)
-      if tokens is [{kind: Symbol(";") }, .. rest] {
-        continue rest
-      } else if stmt.kind is ExprStmt(_) && tokens is [{ kind: Bracket('}') }, ..rest] {
-        break rest
-      } else {
-        raise ParseError("Parse Error: Expected ';' after statement in block expression")
-      }
+      continue tokens
     }
   }
   let block_expr = BlockExpr::{
