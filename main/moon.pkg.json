@@ -1,6 +1,5 @@
 {
   "is-main": true,
   "import": [
-    "Kaida-Aemthyst/MiniMoonbit/parser",
   ]
 }
