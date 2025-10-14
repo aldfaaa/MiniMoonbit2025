@@ -1,6 +1,6 @@
 
 ///|
-test "Skip Comments" {
+test "MiniMoonBit Challenge 4: Skip Comments" {
   let code =
     #|fnx fn letp mut  // First line
     #|if else struct // Second line

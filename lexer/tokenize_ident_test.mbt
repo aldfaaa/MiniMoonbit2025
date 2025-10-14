@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Identifiers - 1" {
+test "MiniMoonBit Challenge 1: Tokenize Identifiers - 1" {
   let code =
     #|MyStruct my_var anotherVar _privateVar
   let tokens = tokenize(code)
@@ -12,7 +12,7 @@ test "Tokenize Identifiers - 1" {
 }
 
 ///|
-test "Tokenize Identifiers - 2" {
+test "MiniMoonBit Challenge 2: Tokenize Identifiers - 2" {
   let code =
     #|fnx let_var mutp iffy else_ match1 structc enum2
   let tokens = tokenize(code)

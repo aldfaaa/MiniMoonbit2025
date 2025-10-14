@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Int Number" {
+test "MiniMoonBit Challenge 7: Tokenize Int Number" {
   let code =
     #|42 0 65 15899 65355 78451 00012
   let tokens = tokenize(code)

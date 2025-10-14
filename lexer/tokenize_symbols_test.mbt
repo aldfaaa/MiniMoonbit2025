@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Symbols" {
+test "MiniMoonBit Challenge 4: Tokenize Symbols" {
   let code =
     #|( ) [ ] { } . , : ; -> => ! _
   let tokens = tokenize(code)

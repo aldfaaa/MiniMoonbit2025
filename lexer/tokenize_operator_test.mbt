@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Binary Operators" {
+test "MiniMoonBit Challenge 6: Tokenize Binary Operators" {
   let code =
     #|+ - * / % == != < > <= >= && || & | << >>
   let tokens = tokenize(code)

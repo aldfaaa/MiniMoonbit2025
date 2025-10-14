@@ -1,5 +1,5 @@
 {
   "import": [
-    "username/MiniMoonbit/lexer",
+    "moonbitlang/MiniMoonbit/lexer",
   ]
 }

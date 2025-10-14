@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Keyword" {
+test "MiniMoonBit Challenge 3: Tokenize Keyword" {
   let code =
     #|fn let mut if else struct return _
   let tokens = tokenize(code)

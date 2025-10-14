@@ -1,5 +1,5 @@
 ///|
-test "Tokenize Float Number" {
+test "MiniMoonBit Challenge 8: Tokenize Float Number" {
   let code =
     #|3.14 0.0 2.718 1.6180339887 0.57721 42.0
   let tokens = tokenize(code)
