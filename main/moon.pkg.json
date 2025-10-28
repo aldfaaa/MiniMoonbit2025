@@ -1,8 +1,12 @@
 {
   "is-main": true,
   "import": [
-    "username/MiniMoonbit/lexer",
-    "username/MiniMoonbit/parser",
-    "moonbitlang/x/fs"
+    "Kaida-Amethyst/MoonLLVM/IR",
+    "moonbitlang/x/fs",
+    "moonbitlang/MiniMoonbit/lexer",
+    "moonbitlang/MiniMoonbit/parser",
+    "moonbitlang/MiniMoonbit/typecheck",
+    "moonbitlang/MiniMoonbit/knf",
+    "moonbitlang/MiniMoonbit/codegen",
   ]
 }

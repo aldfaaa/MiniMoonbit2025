@@ -24,14 +24,9 @@ pub fn parse_let_stmt(
     raise ParseError("Expect '='")
   }
   let (expr, tokens) = parse_expr(tokens)
-  let let_stmt = LetStmt::{
-    pattern,
-    ty,
-    expr,
-  }
+  let let_stmt = LetStmt::{ pattern, ty, expr }
   guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
     raise ParseError("Expect ';' after let statement")
   }
   (let_stmt, tokens)
 }
-

@@ -1,9 +1,11 @@
+///|
 pub struct TopLet {
   name : String
   ty : Type?
   expr : Expr
 } derive(Show, Eq)
 
+///|
 pub fn parse_top_let(
   tokens : ArrayView[Token],
 ) -> (TopLet, ArrayView[Token]) raise ParseError {
@@ -27,11 +29,6 @@ pub fn parse_top_let(
   guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
     raise ParseError("Failed Parsing Top Let: Expect ';'")
   }
-  let top_let = TopLet::{
-    name,
-    ty,
-    expr,
-  }
+  let top_let = TopLet::{ name, ty, expr }
   (top_let, tokens)
 }
-

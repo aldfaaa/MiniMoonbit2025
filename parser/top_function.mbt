@@ -1,4 +1,4 @@
-
+///|
 pub(all) struct Param {
   name : String
   ty : Type
@@ -27,6 +27,7 @@ pub fn parse_param(
   (param, tokens)
 }
 
+///|
 pub fn parse_param_list(
   tokens : ArrayView[Token],
 ) -> (Array[Param], ArrayView[Token]) raise ParseError {
@@ -54,6 +55,7 @@ pub fn parse_param_list(
   (params, tokens)
 }
 
+///|
 pub fn parse_top_function(
   tokens : ArrayView[Token],
 ) -> (TopFunction, ArrayView[Token]) raise ParseError {
@@ -78,18 +80,10 @@ pub fn parse_top_function(
     let (ret_ty, tokens) = parse_type(tokens)
     (param_list, ret_ty, tokens)
   } else {
-    let ret_type = Type::{
-      kind: Unit,
-    }
+    let ret_type = Type::{ kind: Unit }
     (Array::new(), ret_type, tokens)
   }
   let (body, tokens) = parse_block_expr(tokens)
-  let top_function = TopFunction::{
-    fname,
-    param_list,
-    ret_ty,
-    body,
-  }
+  let top_function = TopFunction::{ fname, param_list, ret_ty, body }
   (top_function, tokens)
 }
-

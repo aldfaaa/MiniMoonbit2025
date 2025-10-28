@@ -9,12 +9,7 @@ pub(all) struct LetMutStmt {
 pub fn parse_let_mut_stmt(
   tokens : ArrayView[Token],
 ) -> (LetMutStmt, ArrayView[Token]) raise ParseError {
-  guard tokens
-    is [
-      { kind: Keyword(Let) },
-      { kind: Keyword(Mut) },
-      .. tokens,
-    ] else {
+  guard tokens is [{ kind: Keyword(Let) }, { kind: Keyword(Mut) }, .. tokens] else {
     println("Compiler ICE: Misuse parse_let_mut_stmt")
     panic()
   }
@@ -28,14 +23,10 @@ pub fn parse_let_mut_stmt(
     (None, tokens)
   }
   guard tokens is [{ kind: AssignOp(Assign) }, .. tokens] else {
-    raise ParseError( "Expect '='")
+    raise ParseError("Expect '='")
   }
   let (expr, tokens) = parse_expr(tokens)
-  let let_mut_stmt = LetMutStmt::{
-    name,
-    ty,
-    expr,
-  }
+  let let_mut_stmt = LetMutStmt::{ name, ty, expr }
   guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
     raise ParseError("Expect ';' at the end of let mut statement")
   }

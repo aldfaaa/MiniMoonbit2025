@@ -17,9 +17,7 @@ pub fn parse_left_value(
   guard tokens is [{ kind: Lower(ident) }, .. tokens] else {
     raise ParseError("Expect a lower ident")
   }
-  let left_value = LeftValue::{
-    kind: LeftValueKind::Ident(ident),
-  }
+  let left_value = LeftValue::{ kind: LeftValueKind::Ident(ident) }
   if !(tokens is [{ kind: Bracket('[') | Symbol(".") }, ..]) {
     return (left_value, tokens)
   }
@@ -28,7 +26,7 @@ pub fn parse_left_value(
     [{ kind: Bracket('[') }, .. tokens] => {
       let (index_expr, tokens) = parse_expr(tokens)
       guard tokens is [{ kind: Bracket(']') }, .. tokens] else {
-        raise ParseError( "Expect ']'")
+        raise ParseError("Expect ']'")
       }
       left_value = LeftValue::{
         kind: LeftValueKind::ArrayAccess(left_value, index_expr),

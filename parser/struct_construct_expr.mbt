@@ -1,8 +1,10 @@
+///|
 pub(all) struct StructConstructExpr {
   name : String
   fields : Array[(String, Expr)]
 } derive(Show, Eq)
 
+///|
 pub fn parse_struct_construct(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
@@ -19,10 +21,8 @@ pub fn parse_struct_construct(
   }
   let fields : Array[(String, Expr)] = Array::new()
   let tokens = loop tokens {
-    [{ kind: Bracket('}') }, .. rest] =>
-      break rest
-    [{ kind: Symbol(",") }, { kind: Bracket('}') }, .. rest] =>
-      break rest
+    [{ kind: Bracket('}') }, .. rest] => break rest
+    [{ kind: Symbol(",") }, { kind: Bracket('}') }, .. rest] => break rest
     [{ kind: Symbol(",") }, { kind: Lower(field) }, .. tokens] => {
       guard tokens is [{ kind: Symbol(":") }, .. tokens] else {
         raise ParseError("Expect ':'")
@@ -45,12 +45,7 @@ pub fn parse_struct_construct(
     }
     tokens => raise ParseError("InValid Struct Construct: \{tokens[0]}")
   }
-  let struct_construct = StructConstructExpr::{
-    name: name,
-    fields: fields,
-  }
-  let atom_expr = AtomExpr::{
-    kind: StructConstruct(struct_construct),
-  }
+  let struct_construct = StructConstructExpr::{ name, fields }
+  let atom_expr = AtomExpr::{ kind: StructConstruct(struct_construct) }
   (atom_expr, tokens)
 }

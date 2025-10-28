@@ -13,8 +13,7 @@ pub fn parse_block_expr(
   }
   let stmts : Array[Stmt] = Array::new()
   let tokens = loop tokens {
-    [{ kind: Bracket('}') }, .. rest] =>
-      break rest
+    [{ kind: Bracket('}') }, .. rest] => break rest
     [] => {
       println("Compiler ICE: Failed Parsing BlockExpr, Empty Token ArrayView")
       panic()
@@ -25,8 +24,6 @@ pub fn parse_block_expr(
       continue tokens
     }
   }
-  let block_expr = BlockExpr::{
-    stmts,
-  }
+  let block_expr = BlockExpr::{ stmts, }
   (block_expr, tokens)
 }

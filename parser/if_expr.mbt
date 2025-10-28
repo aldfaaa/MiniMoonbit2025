@@ -15,8 +15,7 @@ pub fn parse_if_expr(
   }
   let (cond, tokens) = parse_expr(tokens)
   let (then_block, tokens) = parse_block_expr(tokens)
-  let (else_block, tokens) = if tokens
-    is [{ kind: Keyword(Else) }, .. tokens] {
+  let (else_block, tokens) = if tokens is [{ kind: Keyword(Else) }, .. tokens] {
     if tokens is [{ kind: Keyword(If) }, ..] {
       let (else_if, tokens) = parse_if_expr(tokens)
       (Some(Either::Left(else_if)), tokens)
@@ -30,10 +29,6 @@ pub fn parse_if_expr(
   } else {
     (None, tokens)
   }
-  let if_expr = IfExpr::{
-    cond,
-    then_block,
-    else_block,
-  }
+  let if_expr = IfExpr::{ cond, then_block, else_block }
   (if_expr, tokens)
 }

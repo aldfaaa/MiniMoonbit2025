@@ -1,0 +1,10 @@
+{
+  "import": [
+    "moonbitlang/MiniMoonbit/parser",
+    "Kaida-Amethyst/either"
+  ],
+  "test-import": [
+    "moonbitlang/MiniMoonbit/lexer",
+  ],
+}
+

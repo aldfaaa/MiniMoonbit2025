@@ -15,7 +15,8 @@ pub(all) enum AssignOp {
   ModAssign // %=
 } derive(Show, Eq)
 
-fn AssignOp::from_tok_assign_op(op: @lexer.AssignOp) -> AssignOp {
+///|
+fn AssignOp::from_tok_assign_op(op : @lexer.AssignOp) -> AssignOp {
   match op {
     Assign => Assign
     PlusAssign => PlusAssign
@@ -26,23 +27,19 @@ fn AssignOp::from_tok_assign_op(op: @lexer.AssignOp) -> AssignOp {
   }
 }
 
+///|
 pub fn parse_assign_stmt(
   tokens : ArrayView[Token],
 ) -> (AssignStmt, ArrayView[Token]) raise ParseError {
   let (left_value, tokens) = parse_left_value(tokens)
   guard tokens is [{ kind: AssignOp(op) }, .. tokens] else {
-    raise ParseError( "Expect an assign operator")
+    raise ParseError("Expect an assign operator")
   }
   let op = AssignOp::from_tok_assign_op(op)
   let (expr, tokens) = parse_expr(tokens)
-  let assign_stmt = AssignStmt::{
-    left_value,
-    op,
-    expr,
-  }
-  guard tokens is [{ kind: Symbol(";") }, ..tokens] else {
-    raise ParseError( "Expect a semicolon at the end of an assign statement")
+  let assign_stmt = AssignStmt::{ left_value, op, expr }
+  guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
+    raise ParseError("Expect a semicolon at the end of an assign statement")
   }
   (assign_stmt, tokens)
 }
-

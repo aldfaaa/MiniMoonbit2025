@@ -1,0 +1,227 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "moonbitlang/MiniMoonbit/knf"
+
+import(
+  "moonbitlang/MiniMoonbit/typecheck"
+)
+
+// Values
+fn binop_to_knf(@typecheck.BinaryOp) -> BinaryOp
+
+fn knf_transform(@typecheck.Program) -> KnfProgram raise KnfTransformError
+
+// Errors
+pub(all) suberror KnfTransformError String
+fn KnfTransformError::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfTransformError::to_string(Self) -> String // from trait `Show`
+impl Show for KnfTransformError
+
+// Types and methods
+pub(all) enum BinaryOp {
+  Add
+  Sub
+  Mul
+  Div
+  Mod
+  ShiftLeft
+  ShiftRight
+  Eq
+  NE
+  LT
+  GT
+  LE
+  GE
+  And
+  Or
+  BitAnd
+  BitOr
+}
+fn BinaryOp::equal(Self, Self) -> Bool // from trait `Eq`
+#deprecated
+fn BinaryOp::op_equal(Self, Self) -> Bool // from trait `Eq`
+fn BinaryOp::output(Self, &Logger) -> Unit // from trait `Show`
+fn BinaryOp::to_string(Self) -> String // from trait `Show`
+impl Eq for BinaryOp
+impl Show for BinaryOp
+
+pub(all) struct Context {
+  mut name_env : Env
+  capture : Array[Name]
+  global_stmts : Array[KnfStmt]
+  globals : Map[String, Type]
+}
+fn Context::add_new_name(Self, String, Type) -> Name
+fn Context::add_temp(Self, Type) -> Name
+fn Context::apply_expr_to_knf(Self, @typecheck.ApplyExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::assign_stmt_to_knf(Self, @typecheck.AssignStmt) -> Array[KnfStmt] raise KnfTransformError
+fn Context::atom_expr_to_knf(Self, @typecheck.AtomExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::block_expr_to_knf(Self, @typecheck.BlockExpr) -> KnfBlock raise KnfTransformError
+fn Context::enter_scope(Self) -> Unit
+fn Context::exit_scope(Self) -> Unit
+fn Context::expr_to_knf(Self, @typecheck.Expr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::if_expr_to_knf(Self, @typecheck.IfExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::left_value_to_knf(Self, @typecheck.LeftValue) -> (Array[KnfStmt], KnfLeftValue) raise KnfTransformError
+fn Context::let_mut_stmt_to_knf(Self, @typecheck.LetMutStmt) -> Array[KnfStmt] raise KnfTransformError
+fn Context::let_stmt_to_knf(Self, @typecheck.LetStmt) -> Array[KnfStmt] raise KnfTransformError
+fn Context::local_function_to_knf(Self, @typecheck.LocalFunction) -> KnfClosure raise KnfTransformError
+fn Context::lookup_name(Self, String) -> (Name, Type)?
+fn Context::new() -> Self
+fn Context::program_to_knf(Self, @typecheck.Program) -> KnfProgram raise KnfTransformError
+fn Context::stmt_to_knf(Self, @typecheck.Stmt) -> Array[KnfStmt] raise KnfTransformError
+fn Context::struct_def_to_knf(Self, @typecheck.StructDef) -> KnfStructDef raise KnfTransformError
+fn Context::top_function_to_knf(Self, @typecheck.TopFunction) -> KnfFunction raise KnfTransformError
+fn Context::top_let_to_knf(Self, @typecheck.TopLet) -> KnfTopLet raise KnfTransformError
+fn Context::type_to_knf(Self, @typecheck.Type) -> Type raise KnfTransformError
+fn Context::typekind_to_knf(Self, @typecheck.TypeKind) -> Type raise KnfTransformError
+fn Context::while_stmt_to_knf(Self, @typecheck.WhileStmt) -> Array[KnfStmt] raise KnfTransformError
+
+pub(all) struct Env {
+  local_ : Map[String, (Name, Type)]
+  capture : Map[Name, Type]
+  parent : Env?
+}
+fn Env::get(Self, String) -> Name?
+fn Env::get_and_capture(Self, String) -> (Name, Type)?
+fn Env::get_name_type(Self, Name) -> Type?
+fn Env::new(parent? : Self?) -> Self
+fn Env::set(Self, String, Name, Type) -> Unit
+
+pub(all) struct KnfBlock {
+  stmts : Array[KnfStmt]
+  ty : Type
+}
+fn KnfBlock::nested_to_string(Self) -> String
+fn KnfBlock::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfBlock::to_string(Self, Int) -> String
+impl Show for KnfBlock
+
+pub(all) struct KnfClosure {
+  name : Name
+  params : Array[(Name, Type)]
+  ret_ty : Type
+  body : KnfBlock
+  captured_vars : Map[Name, Type]
+}
+fn KnfClosure::to_string(Self, ident? : Int) -> String
+
+pub(all) enum KnfExpr {
+  Unit
+  Int(Int)
+  Bool(Bool)
+  Double(Double)
+  String(String)
+  Ident(Name)
+  Not(Name)
+  Neg(Name)
+  Binary(BinaryOp, Name, Name)
+  If(KnfExpr, KnfBlock, KnfBlock)
+  Block(KnfBlock)
+  Call(Name, Array[Name])
+  ArrayAccess(Name, Name)
+  FieldAccess(Name, String)
+  TupleAccess(Name, Int)
+  CreateStruct(String, Array[(String, Name)])
+  ArrayLiteral(Type, Array[Name])
+  ArrayMake(Name, Name)
+  TupleLiteral(Array[Name])
+}
+fn KnfExpr::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfExpr::to_string(Self, ident? : Int) -> String
+impl Show for KnfExpr
+
+pub(all) struct KnfFunction {
+  name : String
+  ret_ty : Type
+  params : Array[(Name, Type)]
+  body : KnfBlock
+}
+fn KnfFunction::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfFunction::to_string(Self) -> String // from trait `Show`
+impl Show for KnfFunction
+
+pub(all) enum KnfLeftValue {
+  Ident(Name)
+  ArrayAcc(Name, Name)
+  FieldAcc(Name, String)
+}
+fn KnfLeftValue::to_knf_expr(Self) -> KnfExpr
+
+pub(all) struct KnfProgram {
+  struct_defs : Map[String, KnfStructDef]
+  global_stmts : Array[KnfStmt]
+  top_lets : Map[String, KnfTopLet]
+  functions : Map[String, KnfFunction]
+}
+fn KnfProgram::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfProgram::to_string(Self) -> String // from trait `Show`
+impl Show for KnfProgram
+
+pub(all) enum KnfStmt {
+  Let(Name, Type, KnfExpr)
+  LetMut(Name, Type, KnfExpr)
+  Assign(Name, KnfExpr)
+  ArrayPut(Name, Name, KnfExpr)
+  StructFieldSet(Name, String, Name)
+  While(KnfBlock, KnfBlock)
+  ExprStmt(KnfExpr)
+  Return(KnfExpr)
+  ReturnUnit
+  ClosureDef(KnfClosure)
+}
+fn KnfStmt::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfStmt::to_string(Self, ident? : Int) -> String
+impl Show for KnfStmt
+
+pub(all) struct KnfStructDef {
+  name : String
+  fields : Array[(String, Bool, Type)]
+}
+fn KnfStructDef::get_field_index(Self, String) -> Int?
+fn KnfStructDef::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfStructDef::to_string(Self) -> String // from trait `Show`
+impl Show for KnfStructDef
+
+pub(all) struct KnfTopLet {
+  name : Name
+  ty : Type
+  expr : KnfExpr
+}
+fn KnfTopLet::output(Self, &Logger) -> Unit // from trait `Show`
+fn KnfTopLet::to_string(Self) -> String // from trait `Show`
+impl Show for KnfTopLet
+
+pub(all) struct Name {
+  id : String
+  slot : Int
+}
+fn Name::equal(Self, Self) -> Bool // from trait `Eq`
+fn Name::hash(Self) -> Int // from trait `Hash`
+fn Name::hash_combine(Self, Hasher) -> Unit // from trait `Hash`
+#deprecated
+fn Name::op_equal(Self, Self) -> Bool // from trait `Eq`
+fn Name::output(Self, &Logger) -> Unit // from trait `Show`
+fn Name::to_string(Self) -> String // from trait `Show`
+fn Name::wildcard() -> Self
+impl Eq for Name
+impl Hash for Name
+impl Show for Name
+
+pub(all) enum Type {
+  Unit
+  Int
+  Bool
+  Double
+  String
+  Array(Type)
+  Struct(String)
+  Tuple(Array[Type])
+  Function(Array[Type], Type)
+}
+fn Type::output(Self, &Logger) -> Unit // from trait `Show`
+fn Type::to_string(Self) -> String // from trait `Show`
+impl Show for Type
+
+// Type aliases
+
+// Traits
+

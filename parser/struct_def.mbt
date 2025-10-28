@@ -1,4 +1,4 @@
-
+///|
 pub(all) struct StructDef {
   name : String
   fields : Array[StructField]
@@ -11,6 +11,7 @@ pub(all) struct StructField {
   ty : Type
 } derive(Show, Eq)
 
+///|
 pub fn parse_struct_field(
   tokens : ArrayView[Token],
 ) -> (StructField, ArrayView[Token]) raise ParseError {
@@ -26,17 +27,14 @@ pub fn parse_struct_field(
     raise ParseError("Expect ':' after struct field name")
   }
   let (ty, tokens) = parse_type(tokens)
-  let struct_field = StructField::{
-    is_mut,
-    name,
-    ty,
-  }
-  guard tokens is [{ kind: Symbol(";") }, ..tokens] else {
+  let struct_field = StructField::{ is_mut, name, ty }
+  guard tokens is [{ kind: Symbol(";") }, .. tokens] else {
     raise ParseError("Expect ';' after struct field")
   }
   (struct_field, tokens)
 }
 
+///|
 pub fn parse_struct_def(
   tokens : ArrayView[Token],
 ) -> (StructDef, ArrayView[Token]) raise ParseError {
@@ -45,15 +43,14 @@ pub fn parse_struct_def(
     panic()
   }
   guard tokens is [{ kind: Upper(name) }, .. tokens] else {
-    raise ParseError( "Expect struct name")
+    raise ParseError("Expect struct name")
   }
   guard tokens is [{ kind: Bracket('{') }, .. tokens] else {
     raise ParseError("Failed Parsing StructDef: Expect '{'")
   }
   let fields : Array[StructField] = Array::new()
   let tokens = loop tokens {
-    [{ kind: Bracket('}') }, .. rest] =>
-      break rest
+    [{ kind: Bracket('}') }, .. rest] => break rest
     [] => {
       println("Compiler ICE: Empty Token ArrayView")
       panic()
@@ -64,10 +61,6 @@ pub fn parse_struct_def(
       continue rest
     }
   }
-  let struct_def = StructDef::{
-    name,
-    fields,
-  }
+  let struct_def = StructDef::{ name, fields }
   (struct_def, tokens)
 }
-

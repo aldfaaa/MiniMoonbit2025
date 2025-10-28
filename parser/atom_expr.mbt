@@ -23,29 +23,28 @@ pub fn parse_atom_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
   match tokens {
-    [{ kind: Int(v) }, ..tokens] => {
+    [{ kind: Int(v) }, .. tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Int(v) }
       (expr, tokens)
     }
-    [{ kind: Double(v) }, ..tokens] => {
+    [{ kind: Double(v) }, .. tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Double(v) }
       (expr, tokens)
     }
-    [{ kind: Bool(v) }, ..tokens] => {
+    [{ kind: Bool(v) }, .. tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Bool(v) }
       (expr, tokens)
     }
-    [{ kind: String(s) }, ..tokens] => {
+    [{ kind: String(s) }, .. tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::String(s) }
       (expr, tokens)
     }
-    [{ kind: Lower(ident) }, ..tokens] => {
+    [{ kind: Lower(ident) }, .. tokens] => {
       let expr = AtomExpr::{ kind: AtomExprKind::Ident(ident) }
       (expr, tokens)
     }
     [{ kind: Upper("Array") }, ..] as tokens => parse_array_make_expr(tokens)
-    [{ kind: Upper(_) }, ..] as tokens =>
-      parse_struct_construct(tokens)
+    [{ kind: Upper(_) }, ..] as tokens => parse_struct_construct(tokens)
     [{ kind: Bracket('(') }, ..] as tokens => parse_paren_expr(tokens)
     [{ kind: Bracket('[') }, ..] as tokens => parse_array_expr(tokens)
     [] => {

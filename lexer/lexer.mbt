@@ -101,7 +101,6 @@ pub(all) enum TokenKind {
 ///|
 pub fn tokenize(code : String) -> Array[Token] raise TokenizeError {
   let tokens = Array::new()
-  tokens.clear()
   loop code[:] {
     [] => {
       let tok = Token::new(EOF)
@@ -425,28 +424,22 @@ fn tokenize_number(
   (Token::new(kind), rest)
 }
 
+///|
 fn tokenize_string(
   code : StringView,
 ) -> (Token, StringView) raise TokenizeError {
   guard code is ['\"', .. code] else {
-    println(
-      "Compiler ICE: Tokenize String Error",
-    )
+    println("Compiler ICE: Tokenize String Error")
     panic()
   }
   let sb = StringBuilder::new()
   let rest = loop code {
-    ['\"', .. rest] => {
-      break rest
-    }
+    ['\"', .. rest] => break rest
     [c, .. rest] => {
       sb.write_char(c)
       continue rest
     }
-    [] =>
-      raise TokenizeError(
-        "Tokenize Error: Unterminated string literal",
-      )
+    [] => raise TokenizeError("Tokenize Error: Unterminated string literal")
   }
   let str_val = sb.to_string()
   (Token::new(String(str_val)), rest)
