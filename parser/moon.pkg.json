@@ -1,6 +1,6 @@
 {
   "import": [
-    "moonbitlang/MiniMoonbit/lexer",
+    "Kaida-Amethyst/MiniMoonbit/lexer",
     "Kaida-Amethyst/either"
   ]
 }

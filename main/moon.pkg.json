@@ -3,10 +3,10 @@
   "import": [
     "Kaida-Amethyst/MoonLLVM/IR",
     "moonbitlang/x/fs",
-    "moonbitlang/MiniMoonbit/lexer",
-    "moonbitlang/MiniMoonbit/parser",
-    "moonbitlang/MiniMoonbit/typecheck",
-    "moonbitlang/MiniMoonbit/knf",
-    "moonbitlang/MiniMoonbit/codegen",
+    "Kaida-Amethyst/MiniMoonbit/lexer",
+    "Kaida-Amethyst/MiniMoonbit/parser",
+    "Kaida-Amethyst/MiniMoonbit/typecheck",
+    "Kaida-Amethyst/MiniMoonbit/knf",
+    "Kaida-Amethyst/MiniMoonbit/codegen",
   ]
 }
