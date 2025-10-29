@@ -76,27 +76,52 @@ pub fn parse_expr(
       let expr = Expr::{ kind: ExprKind::BlockExpr(block) }
       return (expr, rest)
     }
-    Not => {
-      let (expr, rest) = parse_expr(tokens[1:])
-      let not_expr = Expr::{ kind: ExprKind::NotExpr(expr) }
-      return (not_expr, rest)
-    }
-    BinaryOp(Sub) => {
-      let (expr, rest) = parse_expr(tokens[1:])
-      let neg_expr = Expr::{ kind: ExprKind::NegExpr(expr) }
-      return (neg_expr, rest)
-    }
     _ => ()
   }
   let op_stack : @deque.Deque[BinaryOp] = @deque.Deque::new()
   let expr_stack : @deque.Deque[Expr] = @deque.Deque::new()
-  let (apply_expr, tokens) = parse_apply_expr(tokens)
-  let head_expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+
+  // Parse unary expression (Not or Neg) or apply expression
+  let (head_expr, tokens) = match tokens {
+    [{ kind: Not }, .. rest] => {
+      let (apply_expr, rest) = parse_apply_expr(rest)
+      let expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+      let not_expr = Expr::{ kind: ExprKind::NotExpr(expr) }
+      (not_expr, rest)
+    }
+    [{ kind: BinaryOp(Sub) }, .. rest] => {
+      let (apply_expr, rest) = parse_apply_expr(rest)
+      let expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+      let neg_expr = Expr::{ kind: ExprKind::NegExpr(expr) }
+      (neg_expr, rest)
+    }
+    _ => {
+      let (apply_expr, tokens) = parse_apply_expr(tokens)
+      (Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }, tokens)
+    }
+  }
   expr_stack.push_back(head_expr)
   let mut tokens = tokens
   while tokens is [{ kind: BinaryOp(op) }, .. rest] {
-    let (apply_expr, rest) = parse_apply_expr(rest)
-    let next_expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+    // Parse unary expression or apply expression after binary operator
+    let (next_expr, rest) = match rest {
+      [{ kind: Not }, .. rest] => {
+        let (apply_expr, rest) = parse_apply_expr(rest)
+        let expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+        let not_expr = Expr::{ kind: ExprKind::NotExpr(expr) }
+        (not_expr, rest)
+      }
+      [{ kind: BinaryOp(Sub) }, .. rest] => {
+        let (apply_expr, rest) = parse_apply_expr(rest)
+        let expr = Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }
+        let neg_expr = Expr::{ kind: ExprKind::NegExpr(expr) }
+        (neg_expr, rest)
+      }
+      _ => {
+        let (apply_expr, rest) = parse_apply_expr(rest)
+        (Expr::{ kind: ExprKind::ApplyExpr(apply_expr) }, rest)
+      }
+    }
     let op = BinaryOp::from_tok_binary_op(op)
     while !op_stack.is_empty() &&
           op.precedence() <= op_stack.back().unwrap().precedence() {
