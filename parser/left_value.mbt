@@ -23,7 +23,7 @@ pub fn parse_left_value(
   }
   let mut left_value = left_value
   loop tokens {
-    [{ kind: Bracket('['), ..  }, .. tokens] => {
+    [{ kind: Bracket('['), .. }, .. tokens] => {
       let (index_expr, tokens) = parse_expr(tokens)
       guard tokens is [{ kind: Bracket(']'), .. }, .. tokens] else {
         raise ParseError("Expect ']'")

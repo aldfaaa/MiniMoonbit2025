@@ -38,14 +38,14 @@ pub fn parse_param_list(
       params.push(param)
       continue rest
     }
-    [{ kind: Symbol(","), ..  }, { kind: Lower(_) , .. }, ..] as tokens => {
+    [{ kind: Symbol(","), .. }, { kind: Lower(_), .. }, ..] as tokens => {
       let (param, rest) = parse_param(tokens[1:])
       params.push(param)
       continue rest
     }
-    [{ kind: Symbol(","), ..  }, { kind: Bracket(')'), ..  }, ..] as tokens =>
+    [{ kind: Symbol(","), .. }, { kind: Bracket(')'), .. }, ..] as tokens =>
       break tokens[1:]
-    [{ kind: Bracket(')'), ..  }, ..] as tokens => break tokens
+    [{ kind: Bracket(')'), .. }, ..] as tokens => break tokens
     [] => {
       println("Compiler ICE: Empty Token ArrayView")
       panic()
@@ -59,22 +59,22 @@ pub fn parse_param_list(
 pub fn parse_top_function(
   tokens : ArrayView[Token],
 ) -> (TopFunction, ArrayView[Token]) raise ParseError {
-  guard tokens is [{ kind: Keyword(Fn), ..  }, .. tokens] else {
+  guard tokens is [{ kind: Keyword(Fn), .. }, .. tokens] else {
     println("Compiler ICE: Misuse parse_top_function")
     panic()
   }
-  guard tokens is [{ kind: Lower(fname), ..  }, .. tokens] else {
+  guard tokens is [{ kind: Lower(fname), .. }, .. tokens] else {
     raise ParseError("Expect a lower ident")
   }
   let (param_list, ret_ty, tokens) = if !(fname is "main") {
-    guard tokens is [{ kind: Bracket('('), ..  }, .. tokens] else {
+    guard tokens is [{ kind: Bracket('('), .. }, .. tokens] else {
       raise ParseError("Expect '('")
     }
     let (param_list, tokens) = parse_param_list(tokens)
-    guard tokens is [{ kind: Bracket(')'), ..  }, .. tokens] else {
+    guard tokens is [{ kind: Bracket(')'), .. }, .. tokens] else {
       raise ParseError("Expect ')'")
     }
-    guard tokens is [{ kind: Symbol("->"), ..  }, .. tokens] else {
+    guard tokens is [{ kind: Symbol("->"), .. }, .. tokens] else {
       raise ParseError("Expect '->'")
     }
     let (ret_ty, tokens) = parse_type(tokens)

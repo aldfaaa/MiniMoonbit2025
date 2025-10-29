@@ -25,8 +25,12 @@ pub fn parse_let_stmt(
   }
   let (expr, tokens) = parse_expr(tokens)
   let let_stmt = LetStmt::{ pattern, ty, expr }
-  guard tokens is [{ kind: Symbol(";"), .. }, .. tokens] else {
-    raise ParseError("Expect ';' after let statement")
+  let tokens = if tokens is [{ kind: Symbol(";"), .. }, .. tokens] {
+    tokens
+  } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
+    tokens
+  } else {
+    raise ParseError("Expect ';' or newline after let statement")
   }
   (let_stmt, tokens)
 }

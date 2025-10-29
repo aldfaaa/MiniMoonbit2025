@@ -1,6 +1,7 @@
 ///|
 pub(all) struct AtomExpr {
   kind : AtomExprKind
+  toks : ArrayView[Token]
 } derive(Show, Eq)
 
 ///|
@@ -19,28 +20,40 @@ pub(all) enum AtomExprKind {
 } derive(Show, Eq)
 
 ///|
+pub fn AtomExpr::new(
+  kind : AtomExprKind,
+  init_tokens : ArrayView[Token],
+  rest_tokens : ArrayView[Token],
+) -> AtomExpr {
+  let len = rest_tokens.start_offset() - init_tokens.start_offset()
+  let toks = init_tokens[0:len]
+  AtomExpr::{ kind, toks }
+}
+
+///|
 pub fn parse_atom_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
   match tokens {
     [{ kind: Int(v), .. }, .. tokens] => {
-      let expr = AtomExpr::{ kind: AtomExprKind::Int(v) }
+      let expr = AtomExpr::new(Int(v), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: Double(v), .. }, .. tokens] => {
-      let expr = AtomExpr::{ kind: AtomExprKind::Double(v) }
+      let expr = AtomExpr::new(Double(v), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: Bool(v), .. }, .. tokens] => {
-      let expr = AtomExpr::{ kind: AtomExprKind::Bool(v) }
+      let expr = AtomExpr::new(Bool(v), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: String(s), .. }, .. tokens] => {
-      let expr = AtomExpr::{ kind: AtomExprKind::String(s) }
+      let expr = AtomExpr::new(String(s), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: Lower(ident), .. }, .. tokens] => {
-      let expr = AtomExpr::{ kind: AtomExprKind::Ident(ident) }
+      let expr = AtomExpr::new(Ident(ident), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: Upper("Array"), .. }, ..] as tokens =>
@@ -60,6 +73,7 @@ pub fn parse_atom_expr(
 fn parse_paren_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
   guard tokens is [{ kind: Bracket('('), .. }, .. tokens] else {
     println("Compiler ICE: Misuse parse_paren_or_tuple_expr")
     panic()
@@ -89,7 +103,7 @@ fn parse_paren_expr(
     1 => AtomExprKind::Paren(exprs[0])
     _ => AtomExprKind::Tuple(exprs)
   }
-  let atom_expr = AtomExpr::{ kind, }
+  let atom_expr = AtomExpr::new(kind, init_tokens, tokens)
   (atom_expr, tokens)
 }
 
@@ -97,6 +111,7 @@ fn parse_paren_expr(
 fn parse_array_make_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
   guard tokens
     is [
       { kind: Upper("Array"), .. },
@@ -116,9 +131,11 @@ fn parse_array_make_expr(
   guard tokens is [{ kind: Bracket(')'), .. }, .. tokens] else {
     raise ParseError("Expected ')' after init expression in Array::make")
   }
-  let atom_expr = AtomExpr::{
-    kind: AtomExprKind::ArrayMake(size_expr, init_expr),
-  }
+  let atom_expr = AtomExpr::new(
+    AtomExprKind::ArrayMake(size_expr, init_expr),
+    init_tokens,
+    tokens,
+  )
   (atom_expr, tokens)
 }
 
@@ -126,6 +143,7 @@ fn parse_array_make_expr(
 fn parse_array_expr(
   tokens : ArrayView[Token],
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
   guard tokens is [{ kind: Bracket('['), .. }, .. tokens] else {
     println("Compiler ICE: Misuse parse_array_expr")
     panic()
@@ -150,6 +168,6 @@ fn parse_array_expr(
       continue rest
     }
   }
-  let atom_expr = AtomExpr::{ kind: AtomExprKind::Array(exprs) }
+  let atom_expr = AtomExpr::new(AtomExprKind::Array(exprs), init_tokens, tokens)
   (atom_expr, tokens)
 }

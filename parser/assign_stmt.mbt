@@ -38,8 +38,12 @@ pub fn parse_assign_stmt(
   let op = AssignOp::from_tok_assign_op(op)
   let (expr, tokens) = parse_expr(tokens)
   let assign_stmt = AssignStmt::{ left_value, op, expr }
-  guard tokens is [{ kind: Symbol(";"), .. }, .. tokens] else {
-    raise ParseError("Expect a semicolon at the end of an assign statement")
+  let tokens = if tokens is [{ kind: Symbol(";"), .. }, .. tokens] {
+    tokens
+  } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
+    tokens
+  } else {
+    raise ParseError("Expect ';' or newline after assign statement")
   }
   (assign_stmt, tokens)
 }

@@ -23,13 +23,17 @@ pub fn parse_let_mut_stmt(
   } else {
     (None, tokens)
   }
-  guard tokens is [{ kind: AssignOp(Assign), ..  }, .. tokens] else {
+  guard tokens is [{ kind: AssignOp(Assign), .. }, .. tokens] else {
     raise ParseError("Expect '='")
   }
   let (expr, tokens) = parse_expr(tokens)
   let let_mut_stmt = LetMutStmt::{ name, ty, expr }
-  guard tokens is [{ kind: Symbol(";"), .. }, .. tokens] else {
-    raise ParseError("Expect ';' at the end of let mut statement")
+  let tokens = if tokens is [{ kind: Symbol(";"), .. }, .. tokens] {
+    tokens
+  } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
+    tokens
+  } else {
+    raise ParseError("Expect ';' or newline after let mut statement")
   }
   (let_mut_stmt, tokens)
 }
