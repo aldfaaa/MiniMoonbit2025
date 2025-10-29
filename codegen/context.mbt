@@ -88,6 +88,10 @@ pub fn Context::new(mod_name : String) -> Context {
   let sqrt_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
   let atan_ty = try! llvm_ctx.getFunctionType(doublety, [doublety])
   let truncate_ty = try! llvm_ctx.getFunctionType(i32ty, [doublety])
+  let print_real_ty = try! llvm_ctx.getFunctionType(
+      llvm_ctx.getVoidTy(),
+      [doublety],
+    )
   let builtin_func_tys = {
     "moonbit_malloc": moonbit_malloc_ty,
     "print_int": print_int_ty,
@@ -119,6 +123,7 @@ pub fn Context::new(mod_name : String) -> Context {
     "sqrt": sqrt_ty,
     "atan": atan_ty,
     "truncate": truncate_ty,
+    "print_real": print_real_ty,
   }
   let ctx = Context::{
     llvm_ctx,

@@ -81,5 +81,6 @@ pub fn knf_transform(
   context.globals.set("abs_float", Function([Double], Double))
   context.globals.set("print_endline", Function([], Unit))
   context.globals.set("truncate", Function([Double], Int))
+  context.globals.set("print_real", Function([Double], Unit))
   context.program_to_knf(prog)
 }

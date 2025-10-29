@@ -95,6 +95,10 @@ pub fn Context::new() -> Context {
     kind: Function([Double], Int),
     mutable: false,
   })
+  ctx.type_env.set("print_real", Type::{
+    kind: Function([Double], Unit),
+    mutable: false,
+  })
   ctx.func_types.set("print_int", Function([Int], Unit))
   ctx.func_types.set("print_bool", Function([Bool], Unit))
   ctx.func_types.set("print_string", Function([String], Unit))
@@ -107,6 +111,7 @@ pub fn Context::new() -> Context {
   ctx.func_types.set("abs_float", Function([Double], Double))
   ctx.func_types.set("print_endline", Function([], Unit))
   ctx.func_types.set("truncate", Function([Double], Int))
+  ctx.func_types.set("print_real", Function([Double], Unit))
   ctx
 }
 
