@@ -27,7 +27,6 @@ pub fn Context::top_function_to_knf(
   let func_name = self.add_new_name(top_func.fname, func_type)
   let new_body = self.block_expr_to_knf(top_func.body)
   self.exit_scope()
-  self.globals.set(func_name.id, func_type)
   KnfFunction::{
     name: func_name.to_string(),
     ret_ty,

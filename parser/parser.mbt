@@ -2,6 +2,7 @@
 pub(all) struct Program {
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
+  extern_funcions: Map[String, ExternFunction]
   struct_defs : Map[String, StructDef]
 } derive(Show)
 
@@ -9,8 +10,14 @@ pub(all) struct Program {
 pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
   let top_lets = Map::new()
   let top_functions = Map::new()
+  let extern_funcions = Map::new()
   let struct_defs = Map::new()
   loop tokens[:] {
+    [{ kind: Keyword(Extern) }, ..] as tokens => {
+      let (extern_fn, rest) = parse_extern_function(tokens)
+      extern_funcions.set(extern_fn.fname, extern_fn)
+      continue rest
+    }
     [{ kind: Keyword(Fn) }, ..] as tokens => {
       let (top_fn, rest) = parse_top_function(tokens)
       top_functions.set(top_fn.fname, top_fn)
@@ -33,6 +40,6 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
     }
     tokens => raise ParseError("Unexpected token in top level: \{tokens[0]}")
   }
-  let prog = Program::{ top_lets, top_functions, struct_defs }
+  let prog = Program::{ top_lets, top_functions, extern_funcions, struct_defs }
   prog
 }

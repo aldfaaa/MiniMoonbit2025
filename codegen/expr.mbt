@@ -455,11 +455,15 @@ pub fn Context::expr_codegen(
       Some(v)
     }
     // For extern function calls, just call directly
-    Call(fname, arg_names) if self.is_builtin_name(fname) => {
-      let func_value = self.get_builtin_function(fname.to_string())
+    Call(fname, arg_names) if self.is_extern_name(fname) => {
+      let func_value = self.get_extern_function(fname.to_string())
       let arg_values = arg_names.map(n => self.get_value_by_name_or_load(n))
       let v = self.builder.createCall(func_value, arg_values)
       Some(v)
+    }
+    Call(fname, _) => {
+      println(self.is_extern_name(fname))
+      raise CodegenError("Unsupported function call to \{fname} in codegen")
     }
     e => raise CodegenError("Unsupported expression in codegen: \{e}")
   }

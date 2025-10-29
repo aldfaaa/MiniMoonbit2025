@@ -47,71 +47,6 @@ pub fn Context::new() -> Context {
     func_types: Map::new(),
     current_func_ret_ty: None,
   }
-  ctx.type_env.set("print_int", Type::{
-    kind: Function([Int], Unit),
-    mutable: false,
-  })
-  ctx.type_env.set("print_bool", Type::{
-    kind: Function([Bool], Unit),
-    mutable: false,
-  })
-  ctx.type_env.set("print_string", Type::{
-    kind: Function([String], Unit),
-    mutable: false,
-  })
-  ctx.type_env.set("sin", Type::{
-    kind: Function([Double], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("cos", Type::{
-    kind: Function([Double], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("sqrt", Type::{
-    kind: Function([Double], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("atan", Type::{
-    kind: Function([Double], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("float_of_int", Type::{
-    kind: Function([Int], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("int_of_float", Type::{
-    kind: Function([Double], Int),
-    mutable: false,
-  })
-  ctx.type_env.set("abs_float", Type::{
-    kind: Function([Double], Double),
-    mutable: false,
-  })
-  ctx.type_env.set("print_endline", Type::{
-    kind: Function([], Unit),
-    mutable: false,
-  })
-  ctx.type_env.set("truncate", Type::{
-    kind: Function([Double], Int),
-    mutable: false,
-  })
-  ctx.type_env.set("print_real", Type::{
-    kind: Function([Double], Unit),
-    mutable: false,
-  })
-  ctx.func_types.set("print_int", Function([Int], Unit))
-  ctx.func_types.set("print_bool", Function([Bool], Unit))
-  ctx.func_types.set("print_string", Function([String], Unit))
-  ctx.func_types.set("sin", Function([Double], Double))
-  ctx.func_types.set("cos", Function([Double], Double))
-  ctx.func_types.set("sqrt", Function([Double], Double))
-  ctx.func_types.set("atan", Function([Double], Double))
-  ctx.func_types.set("float_of_int", Function([Int], Double))
-  ctx.func_types.set("int_of_float", Function([Double], Int))
-  ctx.func_types.set("abs_float", Function([Double], Double))
-  ctx.func_types.set("print_endline", Function([], Unit))
-  ctx.func_types.set("truncate", Function([Double], Int))
-  ctx.func_types.set("print_real", Function([Double], Unit))
   ctx
 }
 
@@ -158,6 +93,7 @@ pub fn Context::add_type_var(self : Context) -> TypeKind {
 pub(all) struct Program {
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
+  extern_funcions : Map[String, ExternFunction]
   struct_defs : Map[String, StructDef]
 } derive(Show)
 
@@ -171,6 +107,11 @@ pub fn Context::check_program(
   let struct_defs = Map::new()
   let top_lets = Map::new()
   let top_functions = Map::new()
+  let extern_funcions = Map::new()
+  for name, ext_func in program.extern_funcions {
+    let checked_ext_func = self.check_extern_function(ext_func)
+    extern_funcions.set(name, checked_ext_func)
+  }
   for name, struct_def in program.struct_defs {
     let check_struct_def = self.check_struct_def(struct_def)
     struct_defs.set(name, check_struct_def)
@@ -183,7 +124,7 @@ pub fn Context::check_program(
     let checked_top_func = self.check_top_function(top_func)
     top_functions.set(name, checked_top_func)
   }
-  Program::{ top_lets, top_functions, struct_defs }
+  Program::{ top_lets, top_functions, extern_funcions, struct_defs }
 }
 
 ///|
@@ -209,6 +150,25 @@ pub fn Context::collect_function_types(
   self : Context,
   program : @parser.Program,
 ) -> Unit raise TypeCheckError {
+  for ext_func in program.extern_funcions.values() {
+    if self.func_types.contains(ext_func.fname) {
+      raise TypeCheckError("Duplicate function name: \{ext_func.fname}")
+    } else {
+      let param_types = Array::new()
+      for param in ext_func.param_list {
+        let { ty, .. } = param
+        let ty = self.check_parser_type(ty)
+        param_types.push(ty.kind)
+      }
+      let ret_ty = match ext_func.ret_ty {
+        Some(ty) => self.check_parser_type(ty)
+        None => Type::{ kind: Unit, mutable: false }
+      }
+      let fty = Function(param_types, ret_ty.kind)
+      self.func_types.set(ext_func.fname, fty)
+      self.type_env.set(ext_func.fname, Type::{ kind: fty, mutable: false })
+    }
+  }
   for func in program.top_functions.values() {
     if self.func_types.contains(func.fname) {
       raise TypeCheckError("Duplicate function name: \{func.fname}")

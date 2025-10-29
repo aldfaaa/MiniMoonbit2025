@@ -1,3 +1,7 @@
+extern "C" fn print_int(x : Int) = "print_int";
+extern "C" fn sqrt(x : Double) -> Double = "sqrt";
+extern "C" fn int_of_float(x : Double) -> Int = "int_of_float";
+
 // N-Body simulation in MoonBit
 // Converted to MiniMoonbit syntax
 

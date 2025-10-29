@@ -12,6 +12,7 @@ pub(all) enum Keyword {
   While
   For
   Return
+  Extern
 } derive(Show, Eq)
 
 ///|
@@ -357,6 +358,7 @@ fn tokenize_lower_ident(code : StringView) -> (TokenKind, StringView) {
     "while" => Keyword(While)
     "for" => Keyword(For)
     "return" => Keyword(Return)
+    "extern" => Keyword(Extern)
     "true" => Bool(true)
     "false" => Bool(false)
     "_" => Wildcard

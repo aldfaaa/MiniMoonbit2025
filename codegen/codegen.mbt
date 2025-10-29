@@ -13,6 +13,7 @@ pub fn codegen(knf_prog : @knf.KnfProgram) -> @llvm.Module raise {
   codegen_ctx.collect_struct_types(knf_prog.struct_defs)
   codegen_ctx.generate_global_stmts(knf_prog.global_stmts)
   codegen_ctx.collect_top_lets(knf_prog.top_lets)
+  codegen_ctx.collect_extern_func_values(knf_prog.externs)
   codegen_ctx.collect_func_values(knf_prog.functions)
   codegen_ctx.generate_functions(knf_prog.functions)
   codegen_ctx.llvm_mod

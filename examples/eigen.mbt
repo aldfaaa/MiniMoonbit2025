@@ -1,3 +1,9 @@
+
+extern "C" fn print_int(x : Int) = "print_int";
+extern "C" fn int_of_float(x : Double) -> Int = "int_of_float";
+extern "C" fn float_of_int(x : Int) -> Double = "float_of_int";
+extern "C" fn sqrt(x : Double) -> Double = "sqrt";
+
 let n_const : Int = 200;
 
 let next : Array[Int] = [1];

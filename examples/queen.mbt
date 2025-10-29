@@ -1,3 +1,5 @@
+extern "C" fn print_int(x : Int) = "print_int";
+
 let max_queens : Int = 100;
 let max_ranks : Int = max_queens;
 let max_files : Int = max_queens;

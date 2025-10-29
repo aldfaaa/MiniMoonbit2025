@@ -45,6 +45,30 @@ pub fn Context::type_codegen_concrete(
   }
 }
 
+pub fn Context::collect_extern_func_values(
+  self : Context,
+  knf_externs : Map[String, @knf.KnfExtern],
+) -> Unit raise {
+  for fname, ext_func in knf_externs {
+    let { params, ret_ty, ffi_name, .. } = ext_func
+    let param_types : Array[&@llvm.Type] = Array::new()
+    for param_type in params {
+      let llvm_param_type = match param_type {
+        Unit => (self.llvm_ctx.getPtrTy() : &@llvm.Type) // If parameter is Unit, use pointer type
+        _ => self.type_codegen_opaque(param_type)
+      }
+      param_types.push(llvm_param_type)
+    }
+    let llvm_ret_type = self.type_codegen_opaque(ret_ty)
+    let llvm_fty = self.llvm_ctx.getFunctionType(llvm_ret_type, param_types)
+    let llvm_func = try! self.llvm_mod.addFunction(llvm_fty, ffi_name)
+    self.extern_funcs.set(fname, llvm_func)
+    // Store the KNF function type
+    let knf_func_type = @knf.Type::Function(params, ret_ty)
+    self.function_types.set(fname, knf_func_type)
+  }
+}
+
 ///|
 pub fn Context::collect_func_values(
   self : Context,

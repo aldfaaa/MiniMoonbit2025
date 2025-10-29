@@ -1,3 +1,4 @@
+extern "C" fn print_int(x : Int) = "print_int";
 
 fn add(a: Int, b: Int) -> Int {
   a + b
