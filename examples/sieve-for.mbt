@@ -30,9 +30,10 @@ fn sieve(limit: Int, primes: Array[Int]) -> Int {
   for i = 2; i <= sqrt_limit; i = i + 1 {
     if is_prime[i] == 1 {
       // Mark multiples of i as non-prime
-      // Start from i*i, use function call in condition
+      // Start from i*i, use is_prime.length() to get limit
       let start = i * i;
-      for j = start; j <= limit; j = j + i {
+      let array_limit = is_prime.length() - 1;
+      for j = start; j <= array_limit; j = j + i {
         is_prime[j] = 0;
       }
     } else {
@@ -40,12 +41,17 @@ fn sieve(limit: Int, primes: Array[Int]) -> Int {
     }
   }
   
-  // Count and collect primes
+  // Count and collect primes using primes.length()
   let mut count = 0;
-  for i = 2; i <= limit; i = i + 1 {
+  let max_limit = is_prime.length() - 1;
+  for i = 2; i <= max_limit; i = i + 1 {
     if is_prime[i] == 1 {
-      primes[count] = i;
-      count = count + 1;
+      if count < primes.length() {
+        primes[count] = i;
+        count = count + 1;
+      } else {
+        ()
+      }
     } else {
       ()
     }

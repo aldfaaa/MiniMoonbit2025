@@ -1,28 +1,19 @@
 extern "C" fn print_int(x : Int) = "print_int";
 extern "C" fn print_endline() = "print_endline";
 
-// Get matrix dimensions - using constants for simplicity
-fn get_rows() -> Int {
-  3
-}
-
-fn get_cols() -> Int {
-  3
-}
-
-// Complex matrix operations using for loops with function calls
+// Complex matrix operations using for loops with array.length() method calls
 fn transpose(src: Array[Array[Int]], dst: Array[Array[Int]]) -> Unit {
-  // Use function calls in for loop conditions
-  for i = 0; i < get_rows(); i = i + 1 {
-    for j = 0; j < get_cols(); j = j + 1 {
+  // Use array.length() method in for loop conditions
+  for i = 0; i < src.length(); i = i + 1 {
+    for j = 0; j < src[0].length(); j = j + 1 {
       dst[j][i] = src[i][j];
     }
   }
 }
 
 fn multiply_scalar(mat: Array[Array[Int]], scalar: Int) -> Unit {
-  let rows = get_rows();
-  let cols = get_cols();
+  let rows = mat.length();
+  let cols = mat[0].length();
   for i = 0; i < rows; i = i + 1 {
     for j = 0; j < cols; j = j + 1 {
       mat[i][j] = mat[i][j] * scalar;
@@ -31,10 +22,9 @@ fn multiply_scalar(mat: Array[Array[Int]], scalar: Int) -> Unit {
 }
 
 fn add_matrices(a: Array[Array[Int]], b: Array[Array[Int]], result: Array[Array[Int]]) -> Unit {
-  let rows = get_rows();
-  for i = 0; i < rows; i = i + 1 {
-    let cols = get_cols();  // Calculate cols inside outer loop
-    for j = 0; j < cols; j = j + 1 {
+  for i = 0; i < a.length(); i = i + 1 {
+    // Calculate cols inside outer loop using array.length()
+    for j = 0; j < a[i].length(); j = j + 1 {
       result[i][j] = a[i][j] + b[i][j];
     }
   }
@@ -42,7 +32,7 @@ fn add_matrices(a: Array[Array[Int]], b: Array[Array[Int]], result: Array[Array[
 
 fn trace(mat: Array[Array[Int]]) -> Int {
   let mut sum = 0;
-  let size = get_rows();
+  let size = mat.length();
   for i = 0; i < size; i = i + 1 {
     sum = sum + mat[i][i];
   }
