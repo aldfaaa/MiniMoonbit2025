@@ -2,6 +2,9 @@
 pub fn typecheck(program : @parser.Program) -> Program raise TypeCheckError {
   let ctx = Context::new()
   let checked_program = ctx.check_program(program)
+  if ctx.has_error_happened() {
+    raise TypeCheckError("Type checking failed.")
+  }
   ctx.substitute_type_var(checked_program)
 }
 
@@ -65,7 +68,7 @@ pub fn Context::substitute_expr_type_var(
       ExprKind::BlockExpr(new_block_expr)
     }
   }
-  Expr::{ kind: new_expr_kind, ty: new_ty_kind }
+  Expr::{ kind: new_expr_kind, ty: new_ty_kind, toks: expr.toks }
 }
 
 ///|
@@ -114,8 +117,9 @@ pub fn Context::substitute_apply_expr_type_var(
           let callee_atom_expr = AtomExpr::{
             kind: callee_atom_kind,
             ty: callee_type_kind,
+            toks: a.toks,
           }
-          ApplyExpr::{ kind: AtomExpr(callee_atom_expr), ty: callee_type_kind }
+          ApplyExpr::{ kind: AtomExpr(callee_atom_expr), ty: callee_type_kind, toks: callee_atom_expr.toks }
         } else if a.kind is Ident("print") {
           let arg_ty = new_arg_exprs[0].ty
           let (new_callee_name, new_callee_arg_ty) = match arg_ty {
@@ -134,8 +138,9 @@ pub fn Context::substitute_apply_expr_type_var(
           let callee_atom_expr = AtomExpr::{
             kind: callee_atom_kind,
             ty: callee_type_kind,
+            toks: a.toks,
           }
-          ApplyExpr::{ kind: AtomExpr(callee_atom_expr), ty: callee_type_kind }
+          ApplyExpr::{ kind: AtomExpr(callee_atom_expr), ty: callee_type_kind, toks: callee_atom_expr.toks }
         } else {
           new_callee_expr
         }
@@ -145,7 +150,7 @@ pub fn Context::substitute_apply_expr_type_var(
       ApplyExprKind::Call(new_callee_expr, new_arg_exprs)
     }
   }
-  ApplyExpr::{ kind: new_apply_expr_kind, ty: new_ty_kind }
+  ApplyExpr::{ kind: new_apply_expr_kind, ty: new_ty_kind, toks: apply_expr.toks }
 }
 
 ///|
@@ -194,7 +199,7 @@ pub fn Context::substitute_atom_expr_type_var(
       AtomExprKind::StructConstruct(new_sc_expr)
     }
   }
-  AtomExpr::{ kind: new_atom_expr_kind, ty: new_ty_kind }
+  AtomExpr::{ kind: new_atom_expr_kind, ty: new_ty_kind, toks: atom_expr.toks }
 }
 
 ///|
@@ -208,7 +213,7 @@ pub fn Context::substitute_struct_construct_expr_type_var(
     let new_field_expr = self.substitute_expr_type_var(field_expr)
     new_fields.push((field_name, new_field_expr))
   }
-  StructConstructExpr::{ name: sc_expr.name, fields: new_fields }
+  StructConstructExpr::{ name: sc_expr.name, fields: new_fields, toks: sc_expr.toks }
 }
 
 ///|

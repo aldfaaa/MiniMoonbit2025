@@ -79,7 +79,7 @@ pub fn Context::is_type_compatible(
   self : Context,
   a : TypeKind,
   b : TypeKind,
-) -> Bool raise TypeCheckError {
+) -> Bool {
   match (a, b) {
     (Unit, Unit) => true
     (Bool, Bool) => true
@@ -117,10 +117,12 @@ pub fn Context::is_type_compatible(
     (_, Any) => true
     (TypeVar(id_a), TypeVar(id_b)) => {
       guard self.type_vars.get(id_b) is Some(ty_b) else {
-        raise TypeCheckError("Unbound type variable: \{id_b}")
+        println("Compiler ICE: Unbound type variable: \{id_b}")
+        panic()
       }
       guard self.type_vars.get(id_a) is Some(ty_a) else {
-        raise TypeCheckError("Unbound type variable: \{id_a}")
+        println("Compiler ICE: Unbound type variable: \{id_a}")
+        panic()
       }
       match (ty_a is TypeVar(_), ty_b is TypeVar(_)) {
         (true, false) => {
@@ -140,7 +142,8 @@ pub fn Context::is_type_compatible(
     }
     (TypeVar(id), ty) => {
       guard self.type_vars.get(id) is Some(bound_ty) else {
-        raise TypeCheckError("Unbound type variable: \{id}")
+        println("Compiler ICE: Unbound type variable: \{id}")
+        panic()
       }
       match bound_ty {
         TypeVar(id) => {
@@ -152,7 +155,8 @@ pub fn Context::is_type_compatible(
     }
     (ty, TypeVar(id)) => {
       guard self.type_vars.get(id) is Some(bound_ty) else {
-        raise TypeCheckError("Unbound type variable: \{id}")
+        println("Compiler ICE: Unbound type variable: \{id}")
+        panic()
       }
       match bound_ty {
         TypeVar(id) => {
@@ -183,11 +187,12 @@ fn Context::set_var_type_to_typekind(
 fn Context::ensure_type(
   self : Context,
   ty : TypeKind,
-) -> TypeKind raise TypeCheckError {
+) -> TypeKind {
   match ty {
     TypeVar(id) => {
       guard self.type_vars.get(id) is Some(bound_ty) else {
-        raise TypeCheckError("Unbound type variable: \{id}")
+        println("Compiler ICE: Unbound type variable: \{id}")
+        panic()
       }
       bound_ty
     }

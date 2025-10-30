@@ -8,11 +8,17 @@ pub(all) struct BlockExpr {
 pub fn Context::check_block_expr(
   self : Context,
   block_expr : @parser.BlockExpr,
-) -> BlockExpr raise TypeCheckError {
+) -> BlockExpr {
   self.enter_scope()
   let checked_stmts = Array::new()
   for stmt in block_expr.stmts {
-    let checked_stmt = self.check_stmt(stmt)
+    let checked_stmt = match (try? self.check_stmt(stmt)) {
+      Ok(s) => s
+      Err(TypeCheckError(msg)) => {
+        self.throw_(stmt.toks[0], msg, Error)
+        continue
+      }
+    }
     checked_stmts.push(checked_stmt)
   }
   self.exit_scope()

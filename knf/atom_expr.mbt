@@ -61,7 +61,7 @@ pub fn Context::atom_expr_to_knf(
     }
     StructConstruct(sc_expr) => {
       let stmts : Array[KnfStmt] = Array::new()
-      let { name, fields } = sc_expr
+      let { name, fields, .. } = sc_expr
       let knf_fields : Array[(String, Name)] = Array::new()
       for field in fields {
         let (field_name, field_expr) = field

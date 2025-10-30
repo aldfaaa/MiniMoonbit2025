@@ -36,6 +36,7 @@ pub(all) struct Context {
   struct_defs : Map[String, StructDef]
   func_types : Map[String, TypeKind]
   mut current_func_ret_ty : TypeKind?
+  priv mut error_happened : Bool
 }
 
 ///|
@@ -46,8 +47,24 @@ pub fn Context::new() -> Context {
     struct_defs: Map::new(),
     func_types: Map::new(),
     current_func_ret_ty: None,
+    error_happened: false,
   }
   ctx
+}
+
+pub fn Context::set_error_happened(self : Context) -> Unit {
+  self.error_happened = true
+}
+
+pub fn Context::throw_(self: Self, tok: Token, msg: String, level: @lexer.ThrowLevel) -> Unit {
+  @lexer.throw_(tok, msg, level)
+  if level is Error {
+    self.set_error_happened()
+  }
+}
+
+pub fn Context::has_error_happened(self : Context) -> Bool {
+  self.error_happened
 }
 
 ///|
@@ -59,7 +76,8 @@ pub fn Context::lookup_type(self : Context, name : String) -> Type? {
   match self.type_env.get(name) {
     None => None
     Some({ kind, mutable }) => {
-      let t = self.ensure_type(kind) catch { _ => return None }
+      let t = self.ensure_type(kind) 
+      // catch { _ => return None }
       let t = Type::{ kind: t, mutable }
       self.type_env.set(name, t)
       Some(t)

@@ -10,11 +10,12 @@ pub(all) struct IfExpr {
 pub fn Context::check_if_expr(
   self : Context,
   if_expr : @parser.IfExpr,
-) -> IfExpr raise TypeCheckError {
+) -> IfExpr {
   let checked_cond = self.check_expr(if_expr.cond)
   // Ensure the condition is of boolean type
   if !(checked_cond.ty is Bool) {
-    raise TypeCheckError("If condition must be of boolean type")
+    let msg = "If condition must be of boolean type"
+    self.throw_(if_expr.toks[0], msg, Error)
   }
   let checked_then_block = self.check_block_expr(if_expr.then_block)
   let then_type = checked_then_block.ty
@@ -22,16 +23,16 @@ pub fn Context::check_if_expr(
     Some(Left(else_if_expr)) => {
       let checked_else_if = self.check_if_expr(else_if_expr)
       if !self.is_type_compatible(then_type, checked_else_if.ty) {
-        raise TypeCheckError(
-          "Type mismatch between then block and else-if block",
-        )
+        let msg = "Type mismatch between then block and else-if block"
+        self.throw_(else_if_expr.toks[0], msg, Error)
       }
       Some(Either::Left(checked_else_if))
     }
     Some(Right(else_block)) => {
       let checked_else = self.check_block_expr(else_block)
       if !self.is_type_compatible(then_type, checked_else.ty) {
-        raise TypeCheckError("Type mismatch between then block and else block")
+        let msg = "Type mismatch between then block and else block"
+        self.throw_(else_block.toks[0], msg, Error)
       }
       Some(Right(checked_else))
     }

@@ -2,6 +2,7 @@
 pub(all) struct Expr {
   kind : ExprKind
   ty : TypeKind
+  toks: ArrayView[Token]
 } derive(Show)
 
 ///|
@@ -97,27 +98,39 @@ fn parser_binop_to_typecheck_binop(tok_bin_op : @parser.BinaryOp) -> BinaryOp {
 pub fn Context::check_expr(
   self : Self,
   expr : @parser.Expr,
-) -> Expr raise TypeCheckError {
+) -> Expr {
   match expr.kind {
     ApplyExpr(apply_expr) => {
       let apply_expr = self.check_apply_expr(apply_expr)
-      Expr::{ kind: ApplyExpr(apply_expr), ty: apply_expr.ty }
+      Expr::{ kind: ApplyExpr(apply_expr), ty: apply_expr.ty, toks: expr.toks  }
     }
     NotExpr(inner_expr) => {
       let checked_inner = self.check_expr(inner_expr)
       // Type checking logic for NotExpr
       if self.is_type_compatible(checked_inner.ty, Bool) is false {
-        raise TypeCheckError("Operand of 'not' must be of type Bool")
+        let msg = "Operand of 'not' must be of type Bool"+
+         " while got \{checked_inner.ty}"
+        self.throw_(
+          expr.toks[0],
+          msg,
+          Error,
+        )
       }
-      Expr::{ kind: NotExpr(checked_inner), ty: Bool }
+      Expr::{ kind: NotExpr(checked_inner), ty: Bool, toks: expr.toks  }
     }
     NegExpr(inner_expr) => {
       let checked_inner = self.check_expr(inner_expr)
       // Type checking logic for NegExpr
       if !(checked_inner.ty is (Int | Int64 | Double | Float | TypeVar(_))) {
-        raise TypeCheckError("Operand of 'neg' must be of type Int, Int64, Double, or Float")
+        let msg = "Operand of 'neg' must be of type Int, Int64, Double, or Float"+
+         " while got \{checked_inner.ty}"
+        self.throw_(
+          expr.toks[0],
+          msg,
+          Error,
+        )
       }
-      Expr::{ kind: NegExpr(checked_inner), ty: checked_inner.ty }
+      Expr::{ kind: NegExpr(checked_inner), ty: checked_inner.ty, toks: expr.toks  }
     }
     BinaryExpr(op, left_expr, right_expr) => {
       let checked_left = self.check_expr(left_expr)
@@ -126,8 +139,12 @@ pub fn Context::check_expr(
       if binop_is_arithmetic(op) {
         let t = self.is_type_compatible(checked_left.ty, checked_right.ty)
         if t is false {
-          raise TypeCheckError(
-            "Operands of arithmetic binary operation must be of the same type",
+          let msg = "TypeMismatch: Binary Expression Must have same type for both side" + 
+           " while got \{checked_left.ty} and \{checked_right.ty}"
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let ty = self.ensure_type(checked_left.ty)
@@ -135,75 +152,99 @@ pub fn Context::check_expr(
         if op is Add && ty is String {
           let e = Expr::{
             kind: BinaryExpr(op, checked_left, checked_right),
-            ty: String,
+            ty: String, toks: expr.toks 
           }
           return e
         }
         if !(ty is (Int | Int64 | Double | Float | TypeVar(_))) {
-          raise TypeCheckError(
-            "Operands of arithmetic binary operation must be of type Int, Int64, Double, or Float",
+          let msg = if op is Add {
+            "TypeMismatch: both side of + Must Be Int, Int64, Double, Float, or String, while got \{ty}"
+          } else {
+            "TypeMismatch: both side of \{op} Must Be Int, Int64, Double, or Float, while got \{ty}"
+          }
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let e = Expr::{
           kind: BinaryExpr(op, checked_left, checked_right),
-          ty: checked_left.ty,
+          ty: checked_left.ty, toks: expr.toks
         }
         return e
       }
       if binop_is_cmp(op) {
         let t = self.is_type_compatible(checked_left.ty, checked_right.ty)
         if t is false {
-          raise TypeCheckError(
-            "Operands of comparison binary operation must be of the same type",
+          let msg = "Operands of comparison binary operation must be of the same type"+
+           " while got \{checked_left.ty} and \{checked_right.ty}"
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let e = Expr::{
           kind: BinaryExpr(op, checked_left, checked_right),
-          ty: Bool,
+          ty: Bool, toks: expr.toks
         }
         return e
       }
       if binop_is_bitwise(op) {
         let t = self.is_type_compatible(checked_left.ty, checked_right.ty)
         if t is false {
-          raise TypeCheckError(
-            "Operands of bitwise binary operation must be of the same type",
+          let msg = "Operands of bitwise binary operation must be of the same type"+
+           " while got \{checked_left.ty} and \{checked_right.ty}"
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let ty = self.ensure_type(checked_left.ty)
         if !(ty is (Int | Int64 | TypeVar(_))) {
-          raise TypeCheckError(
-            "Operands of bitwise binary operation must be of type Int or Int64",
+          let msg = "Operands of bitwise binary operation must be of type Int or Int64"+
+           " while got \{ty}"
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let e = Expr::{
           kind: BinaryExpr(op, checked_left, checked_right),
-          ty: checked_left.ty,
+          ty: checked_left.ty, toks: expr.toks
         }
         return e
       }
       if binop_is_logical(op) {
         if !(self.is_type_compatible(checked_left.ty, Bool) &&
           self.is_type_compatible(checked_right.ty, Bool)) {
-          raise TypeCheckError(
-            "Operands of logical binary operation must be of type Bool",
+          let msg = "Operands of logical binary operation must be of type Bool"+
+           " while got \{checked_left.ty} and \{checked_right.ty}"
+          self.throw_(
+            expr.toks[0],
+            msg,
+            Error,
           )
         }
         let e = Expr::{
           kind: BinaryExpr(op, checked_left, checked_right),
-          ty: Bool,
+          ty: Bool, toks: expr.toks
         }
         return e
       }
-      raise TypeCheckError("Unsupported binary operation: \{op}")
+      println("Compile ICE: Unsupported binary operation, Should not reach here.")
+      panic()
     }
     BlockExpr(block_expr) => {
       let checked_block_expr = self.check_block_expr(block_expr)
-      Expr::{ kind: BlockExpr(checked_block_expr), ty: checked_block_expr.ty }
+      Expr::{ kind: BlockExpr(checked_block_expr), ty: checked_block_expr.ty, toks: expr.toks }
     }
     IfExpr(if_expr) => {
       let checked_if_expr = self.check_if_expr(if_expr)
-      Expr::{ kind: IfExpr(checked_if_expr), ty: checked_if_expr.ty }
+      Expr::{ kind: IfExpr(checked_if_expr), ty: checked_if_expr.ty, toks: expr.toks }
     }
   }
 }

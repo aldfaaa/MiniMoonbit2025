@@ -3,12 +3,14 @@ pub(all) struct IfExpr {
   cond : Expr
   then_block : BlockExpr
   else_block : Either[IfExpr, BlockExpr]?
+  toks: ArrayView[Token]
 } derive(Show, Eq)
 
 ///|
 pub fn parse_if_expr(
   tokens : ArrayView[Token],
 ) -> (IfExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
   guard tokens is [{ kind: Keyword(If), .. }, .. tokens] else {
     println("Compiler ICE: Misuse parse_if_expr")
     panic()
@@ -31,6 +33,8 @@ pub fn parse_if_expr(
   } else {
     (None, tokens)
   }
-  let if_expr = IfExpr::{ cond, then_block, else_block }
+  let len = tokens.start_offset() - init_tokens.start_offset()
+  let toks = init_tokens[0:len]
+  let if_expr = IfExpr::{ cond, then_block, else_block, toks }
   (if_expr, tokens)
 }

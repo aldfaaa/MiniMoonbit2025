@@ -2,6 +2,7 @@
 pub(all) struct AtomExpr {
   kind : AtomExprKind
   ty : TypeKind
+  toks: ArrayView[Token]
 } derive(Show)
 
 ///|
@@ -26,7 +27,7 @@ pub(all) enum AtomExprKind {
 pub fn Context::check_atom_expr(
   self : Self,
   atom_expr : @parser.AtomExpr,
-) -> AtomExpr raise TypeCheckError {
+) -> AtomExpr {
   let (typed_atom_expr_kind, type_kind) = match atom_expr.kind {
     Int(v) => (AtomExprKind::Int(v), TypeKind::Int)
     Int64(v) => (AtomExprKind::Int64(v), TypeKind::Int64)
@@ -39,7 +40,14 @@ pub fn Context::check_atom_expr(
     Ident(name) => {
       let ty = match self.lookup_type(name) {
         Some(ty) => ty
-        None => raise TypeCheckError("Undefined identifier: \{name}")
+        None => {
+          self.throw_(
+            atom_expr.toks[0],
+            "Undefined identifier: \{name}",
+            Error,
+          )
+          { kind: TypeKind::Unit, mutable: false }
+        }
       }
       (Ident(name), ty.kind)
     }
@@ -53,14 +61,14 @@ pub fn Context::check_atom_expr(
     Tuple(exprs) => self.check_tuple_expr(exprs)
     StructConstruct(sc_expr) => self.check_struct_construct_expr(sc_expr)
   }
-  AtomExpr::{ kind: typed_atom_expr_kind, ty: type_kind }
+  AtomExpr::{ kind: typed_atom_expr_kind, ty: type_kind, toks: atom_expr.toks }
 }
 
 ///|
 pub fn Context::check_array_expr(
   self : Self,
   exprs : Array[@parser.Expr],
-) -> (AtomExprKind, TypeKind) raise TypeCheckError {
+) -> (AtomExprKind, TypeKind) {
   let exprs = exprs.map(e => self.check_expr(e))
   if exprs.length() == 0 {
     let atom_expr_kind = AtomExprKind::Array([])
@@ -69,7 +77,11 @@ pub fn Context::check_array_expr(
   }
   for expr in exprs {
     if self.is_type_compatible(expr.ty, exprs[0].ty) == false {
-      raise TypeCheckError("Array elements must have the same type")
+      self.throw_(
+        expr.toks[0],
+        "Array elements must have the same type, found \{exprs[0].ty} and \{expr.ty}",
+        Error,
+      )
     }
   }
   let atom_expr_kind : AtomExprKind = AtomExprKind::Array(exprs)
@@ -82,10 +94,12 @@ pub fn Context::check_array_make_expr(
   self : Self,
   size_expr : @parser.Expr,
   init_expr : @parser.Expr,
-) -> (AtomExprKind, TypeKind) raise TypeCheckError {
+) -> (AtomExprKind, TypeKind) {
   let typed_size_expr = self.check_expr(size_expr)
   if !(typed_size_expr.ty is Int) {
-    raise TypeCheckError("Array size must be of type Int")
+    let msg = "Array size must be of type Int, while got \{typed_size_expr.ty}"
+    self.set_error_happened()
+    self.throw_(typed_size_expr.toks[0], msg, Error)
   }
   let typed_init_expr = self.check_expr(init_expr)
   let atom_expr_kind = AtomExprKind::ArrayMake(typed_size_expr, typed_init_expr)
@@ -97,7 +111,7 @@ pub fn Context::check_array_make_expr(
 pub fn Context::check_tuple_expr(
   self : Self,
   exprs : Array[@parser.Expr],
-) -> (AtomExprKind, TypeKind) raise TypeCheckError {
+) -> (AtomExprKind, TypeKind) {
   let typed_exprs = exprs.map(e => self.check_expr(e))
   let atom_expr_kind = AtomExprKind::Tuple(typed_exprs)
   let type_kind = TypeKind::Tuple(typed_exprs.map(e => e.ty))

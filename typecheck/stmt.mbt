@@ -54,7 +54,7 @@ pub fn Context::check_stmt(
         raise TypeCheckError("Return statement used outside of a function")
       }
       if !self.is_type_compatible(func_ret_ty, checked_expr.ty) {
-        raise TypeCheckError("Return type mismatch")
+        raise TypeCheckError("Return type mismatch, wanted: \{ func_ret_ty }, got: \{ checked_expr.ty }")
       }
       Stmt::{ kind: ReturnStmt(Some(checked_expr)) }
     }

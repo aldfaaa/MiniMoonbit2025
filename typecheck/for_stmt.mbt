@@ -37,12 +37,14 @@ pub fn Context::check_for_stmt(
       kind: ExprKind::ApplyExpr(
         ApplyExpr::{ 
           kind: ApplyExprKind::AtomExpr(
-            AtomExpr::{ kind: AtomExprKind::Bool(true), ty: Bool }
+            AtomExpr::{ kind: AtomExprKind::Bool(true), ty: Bool, toks: [] }
           ),
-          ty: Bool
+          ty: Bool,
+          toks: []
         }
       ), 
-      ty: Bool 
+      ty: Bool,
+      toks: []
     }
   }
   
