@@ -10,6 +10,7 @@ pub(all) enum StmtKind {
   LetMutStmt(LetMutStmt)
   AssignStmt(AssignStmt)
   WhileStmt(WhileStmt)
+  ForStmt(ForStmt)
   ExprStmt(Expr)
   ReturnStmt(Expr?)
   LocalFunction(LocalFunction)
@@ -100,6 +101,11 @@ pub fn parse_stmt(
     [{ kind: Keyword(Fn), .. }, ..] as tokens => {
       let (local_function, rest) = parse_local_function(tokens)
       let stmt = Stmt::new(StmtKind::LocalFunction(local_function), init_tokens, rest)
+      (stmt, rest)
+    }
+    [{ kind: Keyword(For), .. }, ..] as tokens => {
+      let (for_stmt, rest) = parse_for_stmt(tokens)
+      let stmt = Stmt::new(StmtKind::ForStmt(for_stmt), init_tokens, rest)
       (stmt, rest)
     }
     [] => {

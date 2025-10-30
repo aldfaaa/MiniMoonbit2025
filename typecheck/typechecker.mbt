@@ -224,6 +224,9 @@ pub fn Context::substitute_stmt_type_var(
       let new_while_stmt = self.substitute_while_stmt_type_var(while_stmt)
       StmtKind::WhileStmt(new_while_stmt)
     }
+    StmtKind::ForStmt(_) => {
+      raise TypeCheckError("ForStmt is not supported in type variable substitution")
+    }
     StmtKind::ExprStmt(expr) => {
       let new_expr = self.substitute_expr_type_var(expr)
       StmtKind::ExprStmt(new_expr)

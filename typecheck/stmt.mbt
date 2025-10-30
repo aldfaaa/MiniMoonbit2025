@@ -9,6 +9,7 @@ pub(all) enum StmtKind {
   LetMutStmt(LetMutStmt)
   AssignStmt(AssignStmt)
   WhileStmt(WhileStmt)
+  ForStmt(ForStmt)
   ExprStmt(Expr)
   ReturnStmt(Expr?)
   LocalFunction(LocalFunction)
@@ -60,6 +61,10 @@ pub fn Context::check_stmt(
     WhileStmt(while_stmt) => {
       let checked_while = self.check_while_stmt(while_stmt)
       Stmt::{ kind: WhileStmt(checked_while) }
+    }
+    ForStmt(for_stmt) => {
+      let checked_for = self.check_for_stmt(for_stmt)
+      Stmt::{ kind: ForStmt(checked_for) }
     }
     LocalFunction(local_function) => {
       let checked_local_function = self.check_local_function(local_function)

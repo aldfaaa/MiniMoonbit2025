@@ -59,6 +59,7 @@ pub fn Context::stmt_to_knf(
     LetMutStmt(let_mut_stmt) => self.let_mut_stmt_to_knf(let_mut_stmt)
     AssignStmt(assign_stmt) => self.assign_stmt_to_knf(assign_stmt)
     WhileStmt(while_stmt) => self.while_stmt_to_knf(while_stmt)
+    ForStmt(for_stmt) => self.for_stmt_to_knf(for_stmt)
     ExprStmt(expr) => {
       let (stmts, knf_expr) = self.expr_to_knf(expr)
       stmts.append([KnfStmt::ExprStmt(knf_expr)])
