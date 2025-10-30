@@ -12,9 +12,12 @@ pub fn Context::expr_codegen(
   match expr {
     Unit => None
     Int(i) => (self.llvm_ctx.getConstInt32(i) : &@llvm.Value) |> Some
+    Int64(i) => self.llvm_ctx.getConstInt64(i) |> Some
     Bool(true) => self.llvm_ctx.getConstTrue() |> Some
     Bool(false) => self.llvm_ctx.getConstFalse() |> Some
     Double(d) => self.llvm_ctx.getConstDouble(d) |> Some
+    Float(f) => self.llvm_ctx.getConstFloat(f.to_float()) |> Some
+    Char(c) => self.llvm_ctx.getConstInt8(c.to_int()) |> Some
     // if name is a top function, we need to make a closure wrapper
     Ident(name) if self.is_top_level_function(name) =>
       Some(self.generate_top_level_function_closure(name))
@@ -144,6 +147,13 @@ pub fn Context::expr_codegen(
           ])
           Some(v)
         }
+        Array(Int64) => {
+          let array_int64_get = self.get_builtin_function("array_int64_get")
+          let v = self.builder.createCall(array_int64_get, [
+            array_value, index_value,
+          ])
+          Some(v)
+        }
         Array(Bool) => {
           let array_bool_get = self.get_builtin_function("array_bool_get")
           let v = self.builder.createCall(array_bool_get, [
@@ -158,9 +168,31 @@ pub fn Context::expr_codegen(
           ])
           Some(v)
         }
+        Array(Float) => {
+          let array_float_get = self.get_builtin_function("array_float_get")
+          let v = self.builder.createCall(array_float_get, [
+            array_value, index_value,
+          ])
+          Some(v)
+        }
+        Array(Char) => {
+          let array_char_get = self.get_builtin_function("array_char_get")
+          let v = self.builder.createCall(array_char_get, [
+            array_value, index_value,
+          ])
+          Some(v)
+        }
         Array(_) => {
           let array_ptr_get = self.get_builtin_function("array_ptr_get")
           let v = self.builder.createCall(array_ptr_get, [
+            array_value, index_value,
+          ])
+          Some(v)
+        }
+        String => {
+          // String array access returns Char
+          let get_char_func = self.get_builtin_function("__builtin_get_char_in_string")
+          let v = self.builder.createCall(get_char_func, [
             array_value, index_value,
           ])
           Some(v)
@@ -226,6 +258,23 @@ pub fn Context::expr_codegen(
       }
       Some(v)
     }
+    // use `make_int64_array`
+    ArrayLiteral(Int64, elements) => {
+      let elem_values = elements.map(e => self.get_value_by_name_or_load(e))
+      let array_size = self.llvm_ctx.getConstInt32(elem_values.length())
+      let make_int64_array_func = self.get_builtin_function("make_int64_array")
+      let init_value = self.llvm_ctx.getConstInt64(0L)
+      let v = self.builder.createCall(make_int64_array_func, [
+        array_size, init_value,
+      ])
+      let array_put = self.get_builtin_function("array_int64_put")
+      for i, elem_value in elem_values {
+        let index_value = self.llvm_ctx.getConstInt32(i)
+        let _ = self.builder.createCall(array_put, [v, index_value, elem_value])
+
+      }
+      Some(v)
+    }
     // use `make_bool_array`
     ArrayLiteral(Bool, elements) => {
       let elem_values = elements.map(e => self.get_value_by_name_or_load(e))
@@ -255,6 +304,40 @@ pub fn Context::expr_codegen(
         array_size, init_value,
       ])
       let array_put = self.get_builtin_function("array_double_put")
+      for i, elem_value in elem_values {
+        let index_value = self.llvm_ctx.getConstInt32(i)
+        let _ = self.builder.createCall(array_put, [v, index_value, elem_value])
+
+      }
+      Some(v)
+    }
+    // use `make_float_array`
+    ArrayLiteral(Float, elements) => {
+      let elem_values = elements.map(e => self.get_value_by_name_or_load(e))
+      let array_size = self.llvm_ctx.getConstInt32(elem_values.length())
+      let make_float_array_func = self.get_builtin_function("make_float_array")
+      let init_value = self.llvm_ctx.getConstFloat(0.0)
+      let v = self.builder.createCall(make_float_array_func, [
+        array_size, init_value,
+      ])
+      let array_put = self.get_builtin_function("array_float_put")
+      for i, elem_value in elem_values {
+        let index_value = self.llvm_ctx.getConstInt32(i)
+        let _ = self.builder.createCall(array_put, [v, index_value, elem_value])
+
+      }
+      Some(v)
+    }
+    // use `make_char_array`
+    ArrayLiteral(Char, elements) => {
+      let elem_values = elements.map(e => self.get_value_by_name_or_load(e))
+      let array_size = self.llvm_ctx.getConstInt32(elem_values.length())
+      let make_char_array_func = self.get_builtin_function("make_char_array")
+      let init_value = self.llvm_ctx.getConstInt8(0)
+      let v = self.builder.createCall(make_char_array_func, [
+        array_size, init_value,
+      ])
+      let array_put = self.get_builtin_function("array_char_put")
       for i, elem_value in elem_values {
         let index_value = self.llvm_ctx.getConstInt32(i)
         let _ = self.builder.createCall(array_put, [v, index_value, elem_value])

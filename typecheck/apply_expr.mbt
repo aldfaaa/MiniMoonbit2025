@@ -34,11 +34,11 @@ pub fn Context::check_apply_expr(
         raise TypeCheckError("Array/String index must be of type Int")
       }
 
-      // Handle String indexing (returns Int representing char)
+      // Handle String indexing (returns Char)
       if checked_array_expr.ty is String {
         ApplyExpr::{
           kind: ApplyExprKind::ArrayAccess(checked_array_expr, checked_index_expr),
-          ty: Int,
+          ty: Char,
         }
       } else {
         // Ensure the array expression is of array type

@@ -6,8 +6,11 @@ pub fn Context::atom_expr_to_knf(
   match atom_expr.kind {
     Unit => ([], KnfExpr::Unit)
     Int(value) => ([], KnfExpr::Int(value))
+    Int64(value) => ([], KnfExpr::Int64(value))
     Bool(value) => ([], KnfExpr::Bool(value))
     Double(value) => ([], KnfExpr::Double(value))
+    Float(value) => ([], KnfExpr::Float(value))
+    Char(value) => ([], KnfExpr::Char(value))
     String(value) => ([], KnfExpr::String(value))
     Ident(name) => {
       guard self.lookup_name(name) is Some((knf_name, _)) else {

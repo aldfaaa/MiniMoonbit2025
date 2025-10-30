@@ -2,8 +2,11 @@
 pub(all) enum KnfExpr {
   Unit
   Int(Int)
+  Int64(Int64)
   Bool(Bool)
   Double(Double)
+  Float(Double)
+  Char(Char)
   String(String)
   Ident(Name)
   Not(Name)
@@ -26,8 +29,11 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
   match self {
     Unit => "()"
     Int(i) => i.to_string()
+    Int64(i) => "\{i}L"
     Bool(b) => b.to_string()
     Double(d) => d.to_string()
+    Float(f) => "\{f}F"
+    Char(c) => "'\{c}'"
     String(s) => "\"\{s}\""
     Ident(name) => name.to_string()
     Not(name) => "!\{name}"

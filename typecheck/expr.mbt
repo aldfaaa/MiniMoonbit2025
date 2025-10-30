@@ -114,8 +114,8 @@ pub fn Context::check_expr(
     NegExpr(inner_expr) => {
       let checked_inner = self.check_expr(inner_expr)
       // Type checking logic for NegExpr
-      if !(checked_inner.ty is (Int | Double | TypeVar(_))) {
-        raise TypeCheckError("Operand of 'neg' must be of type Int or Double")
+      if !(checked_inner.ty is (Int | Int64 | Double | Float | TypeVar(_))) {
+        raise TypeCheckError("Operand of 'neg' must be of type Int, Int64, Double, or Float")
       }
       Expr::{ kind: NegExpr(checked_inner), ty: checked_inner.ty }
     }
@@ -139,9 +139,9 @@ pub fn Context::check_expr(
           }
           return e
         }
-        if !(ty is (Int | Double | TypeVar(_))) {
+        if !(ty is (Int | Int64 | Double | Float | TypeVar(_))) {
           raise TypeCheckError(
-            "Operands of arithmetic binary operation must be of type Int or Double",
+            "Operands of arithmetic binary operation must be of type Int, Int64, Double, or Float",
           )
         }
         let e = Expr::{
@@ -171,9 +171,9 @@ pub fn Context::check_expr(
           )
         }
         let ty = self.ensure_type(checked_left.ty)
-        if !(ty is (Int | TypeVar(_))) {
+        if !(ty is (Int | Int64 | TypeVar(_))) {
           raise TypeCheckError(
-            "Operands of bitwise binary operation must be of type Int",
+            "Operands of bitwise binary operation must be of type Int or Int64",
           )
         }
         let e = Expr::{

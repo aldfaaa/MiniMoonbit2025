@@ -100,7 +100,10 @@ pub fn Context::substitute_apply_expr_type_var(
           let arg_ty = new_arg_exprs[0].ty
           let (new_callee_name, new_callee_arg_ty) = match arg_ty {
             Int => ("__builtin_println_int", TypeKind::Int)
+            Int64 => ("__builtin_println_int64", Int64)
             Double => ("__builtin_println_double", Double)
+            Float => ("__builtin_println_float", Float)
+            Char => ("__builtin_println_char", Char)
             Bool => ("__builtin_println_bool", Bool)
             String => ("__builtin_println_string", String)
             ty =>
@@ -117,7 +120,10 @@ pub fn Context::substitute_apply_expr_type_var(
           let arg_ty = new_arg_exprs[0].ty
           let (new_callee_name, new_callee_arg_ty) = match arg_ty {
             Int => ("__builtin_print_int", TypeKind::Int)
+            Int64 => ("__builtin_print_int64", Int64)
             Double => ("__builtin_print_double", Double)
+            Float => ("__builtin_print_float", Float)
+            Char => ("__builtin_print_char", Char)
             Bool => ("__builtin_print_bool", Bool)
             String => ("__builtin_print_string", String)
             ty =>
@@ -151,7 +157,10 @@ pub fn Context::substitute_atom_expr_type_var(
   let new_atom_expr_kind = match atom_expr.kind {
     AtomExprKind::Unit => AtomExprKind::Unit
     AtomExprKind::Int(value) => AtomExprKind::Int(value)
+    AtomExprKind::Int64(value) => AtomExprKind::Int64(value)
     AtomExprKind::Double(value) => AtomExprKind::Double(value)
+    AtomExprKind::Float(value) => AtomExprKind::Float(value)
+    AtomExprKind::Char(value) => AtomExprKind::Char(value)
     AtomExprKind::Bool(value) => AtomExprKind::Bool(value)
     AtomExprKind::Ident(name) => AtomExprKind::Ident(name)
     AtomExprKind::String(value) => AtomExprKind::String(value)

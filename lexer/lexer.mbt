@@ -87,7 +87,10 @@ pub fn Token::new(kind : TokenKind, line : Int, col : Int, idx : Int) -> Token {
 pub(all) enum TokenKind {
   Bool(Bool) // true, false
   Int(Int) // 1, 42, -100
+  Int64(Int64) // 1L, 42L
   Double(Double)
+  Float(Double) // 1.0F, 3.14F (stored as Double internally)
+  Char(Char) // 'a', '\n'
   String(String) // "hello", "world"
   Keyword(Keyword)
   Upper(String)
@@ -402,6 +405,14 @@ pub fn tokenize(code : String) -> Array[Token] raise TokenizeError {
       idx += len
       continue rest
     }
+    ['\'', ..] as code => {
+      let (tok_kind, len, rest) = tokenize_char(code)
+      let tok = Token::new(tok_kind, line, col, idx)
+      tokens.push(tok)
+      col += len
+      idx += len
+      continue rest
+    }
     ['A'..='Z', ..] as code => {
       let sb = StringBuilder::new()
       let rest = loop code {
@@ -507,18 +518,39 @@ fn tokenize_number(
     _ => rest
   }
   let num_str = sb.to_string()
-  let (kind, rest) = if is_float {
-    let value = @strconv.parse_double(num_str) catch {
-      _ => raise TokenizeError("Invalid Float literal: \{num_str}")
+  // Check for type suffix (L for Int64, F for Float)
+  let (kind, len, rest) = if is_float {
+    match rest {
+      ['F', .. rest] => {
+        let value = @strconv.parse_double(num_str) catch {
+          _ => raise TokenizeError("Invalid Float literal: \{num_str}")
+        }
+        (TokenKind::Float(value), num_str.length() + 1, rest)
+      }
+      _ => {
+        let value = @strconv.parse_double(num_str) catch {
+          _ => raise TokenizeError("Invalid Double literal: \{num_str}")
+        }
+        (TokenKind::Double(value), num_str.length(), rest)
+      }
     }
-    (TokenKind::Double(value), rest)
   } else {
-    let value = @strconv.parse_int(num_str) catch {
-      _ => raise TokenizeError("Invalid Int literal: \{num_str}")
+    match rest {
+      ['L', .. rest] => {
+        let value = @strconv.parse_int64(num_str) catch {
+          _ => raise TokenizeError("Invalid Int64 literal: \{num_str}")
+        }
+        (TokenKind::Int64(value), num_str.length() + 1, rest)
+      }
+      _ => {
+        let value = @strconv.parse_int(num_str) catch {
+          _ => raise TokenizeError("Invalid Int literal: \{num_str}")
+        }
+        (TokenKind::Int(value), num_str.length(), rest)
+      }
     }
-    (TokenKind::Int(value), rest)
   }
-  (kind, num_str.length(), rest)
+  (kind, len, rest)
 }
 
 ///|
@@ -541,4 +573,41 @@ fn tokenize_string(
   let str_val = sb.to_string()
   // + 2 for the surrounding quotes
   (String(str_val), str_val.length() + 2, rest)
+}
+
+///|
+fn parse_escape_char(c : Char) -> Char raise TokenizeError {
+  match c {
+    'n' => '\n'
+    't' => '\t'
+    'r' => '\r'
+    '\\' => '\\'
+    '\'' => '\''
+    '\"' => '\"'
+    _ => raise TokenizeError("Invalid escape sequence: \\\{c}")
+  }
+}
+
+///|
+fn tokenize_char(
+  code : StringView,
+) -> (TokenKind, Int, StringView) raise TokenizeError {
+  guard code is ['\'', .. code] else {
+    println("Compiler ICE: Tokenize Char Error")
+    panic()
+  }
+  let (char_val, len, rest) = match code {
+    ['\\', c, '\'', .. rest] => {
+      // Escaped character
+      let escaped_char = parse_escape_char(c)
+      (escaped_char, 4, rest) // 4 = '\' + c + '\'' = 4 chars including opening quote
+    }
+    [c, '\'', .. rest] => {
+      // Regular character
+      (c, 3, rest) // 3 = '\'' + c + '\''
+    }
+    [] => raise TokenizeError("Tokenize Error: Unterminated char literal")
+    _ => raise TokenizeError("Tokenize Error: Invalid char literal")
+  }
+  (Char(char_val), len, rest)
 }

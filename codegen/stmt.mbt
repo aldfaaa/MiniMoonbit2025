@@ -136,6 +136,13 @@ pub fn Context::array_put_codegen(
       ])
 
     }
+    Array(Int64) => {
+      let array_int64_put = self.get_builtin_function("array_int64_put")
+      let _ = self.builder.createCall(array_int64_put, [
+        array_value, index_value, elem_value,
+      ])
+
+    }
     Array(Bool) => {
       let array_bool_put = self.get_builtin_function("array_bool_put")
       let _ = self.builder.createCall(array_bool_put, [
@@ -146,6 +153,20 @@ pub fn Context::array_put_codegen(
     Array(Double) => {
       let array_double_put = self.get_builtin_function("array_double_put")
       let _ = self.builder.createCall(array_double_put, [
+        array_value, index_value, elem_value,
+      ])
+
+    }
+    Array(Float) => {
+      let array_float_put = self.get_builtin_function("array_float_put")
+      let _ = self.builder.createCall(array_float_put, [
+        array_value, index_value, elem_value,
+      ])
+
+    }
+    Array(Char) => {
+      let array_char_put = self.get_builtin_function("array_char_put")
+      let _ = self.builder.createCall(array_char_put, [
         array_value, index_value, elem_value,
       ])
 

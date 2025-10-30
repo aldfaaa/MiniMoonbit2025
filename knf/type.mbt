@@ -2,8 +2,11 @@
 pub(all) enum Type {
   Unit
   Int
+  Int64
   Bool
   Double
+  Float
+  Char
   String
   Array(Type)
   Struct(String)
@@ -16,8 +19,11 @@ pub impl Show for Type with output(self, logger) {
   let s = match self {
     Unit => "Unit"
     Int => "Int"
+    Int64 => "Int64"
     Bool => "Bool"
     Double => "Double"
+    Float => "Float"
+    Char => "Char"
     String => "String"
     Array(elem_type) => "Array[\{elem_type}]"
     Struct(name) => "\{name}"
@@ -41,8 +47,11 @@ pub fn Context::typekind_to_knf(
   match tk {
     Unit => Unit
     Int => Int
+    Int64 => Int64
     Bool => Bool
     Double => Double
+    Float => Float
+    Char => Char
     String => String
     Array(elem_tk) => Array(self.typekind_to_knf(elem_tk))
     Struct(name) => Struct(name)

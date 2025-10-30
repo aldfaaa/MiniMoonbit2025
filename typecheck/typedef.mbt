@@ -9,7 +9,10 @@ pub(all) enum TypeKind {
   Unit
   Bool
   Int
+  Int64
   Double
+  Float
+  Char
   String
   Tuple(Array[TypeKind])
   Array(TypeKind)
@@ -34,7 +37,10 @@ pub fn Context::check_parser_typekind(
     Unit => Unit
     Bool => Bool
     Int => Int
+    Int64 => Int64
     Double => Double
+    Float => Float
+    Char => Char
     String => String
     Tuple(inner) => {
       let inner_tys = inner.map(from_parser_typekind)
@@ -78,7 +84,10 @@ pub fn Context::is_type_compatible(
     (Unit, Unit) => true
     (Bool, Bool) => true
     (Int, Int) => true
+    (Int64, Int64) => true
     (Double, Double) => true
+    (Float, Float) => true
+    (Char, Char) => true
     (String, String) => true
     (Tuple(types_a), Tuple(types_b)) => {
       if types_a.length() != types_b.length() {
@@ -207,7 +216,10 @@ pub impl Show for TypeKind with output(self, logger) {
     Unit => "Unit"
     Bool => "Bool"
     Int => "Int"
+    Int64 => "Int64"
     Double => "Double"
+    Float => "Float"
+    Char => "Char"
     String => "String"
     Tuple(types) => {
       let inner = types.map(typekind => typekind.to_string()).join(", ")

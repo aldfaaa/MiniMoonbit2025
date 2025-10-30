@@ -13,7 +13,10 @@ pub impl Show for TypeKind with output(self, logger) {
     Unit => "Unit"
     Bool => "Bool"
     Int => "Int"
+    Int64 => "Int64"
     Double => "Double"
+    Float => "Float"
+    Char => "Char"
     String => "String"
     Tuple(tys) => {
       let inner = tys.map(ty => ty.to_string()).join(", ")

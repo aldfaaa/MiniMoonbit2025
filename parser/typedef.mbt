@@ -8,7 +8,10 @@ pub(all) enum TypeKind {
   Unit
   Bool
   Int
+  Int64
   Double
+  Float
+  Char
   String
   Tuple(Array[TypeKind])
   Array(TypeKind)
@@ -24,7 +27,10 @@ pub fn parse_type(
     [{ kind: Upper("Unit"), .. }, .. rest] => (Type::{ kind: Unit }, rest)
     [{ kind: Upper("Bool"), .. }, .. rest] => (Type::{ kind: Bool }, rest)
     [{ kind: Upper("Int"), .. }, .. rest] => (Type::{ kind: Int }, rest)
+    [{ kind: Upper("Int64"), .. }, .. rest] => (Type::{ kind: Int64 }, rest)
     [{ kind: Upper("Double"), .. }, .. rest] => (Type::{ kind: Double }, rest)
+    [{ kind: Upper("Float"), .. }, .. rest] => (Type::{ kind: Float }, rest)
+    [{ kind: Upper("Char"), .. }, .. rest] => (Type::{ kind: Char }, rest)
     [{ kind: Upper("String"), .. }, .. rest] => (Type::{ kind: String }, rest)
     [{ kind: Bracket('('), .. }, ..] as tokens =>
       parse_tuple_or_function_type(tokens)

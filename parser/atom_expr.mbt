@@ -7,7 +7,10 @@ pub(all) struct AtomExpr {
 ///|
 pub(all) enum AtomExprKind {
   Int(Int) // 1, 42, etc
+  Int64(Int64) // 1L, 42L, etc
   Double(Double) // 1.0, 3.14, etc
+  Float(Double) // 1.0F, 3.14F (stored as Double)
+  Char(Char) // 'a', '\n', etc
   Bool(Bool) // true | false
   String(String) // "hello", etc
   Ident(String) // var
@@ -40,8 +43,20 @@ pub fn parse_atom_expr(
       let expr = AtomExpr::new(Int(v), init_tokens, tokens)
       (expr, tokens)
     }
+    [{ kind: Int64(v), .. }, .. tokens] => {
+      let expr = AtomExpr::new(Int64(v), init_tokens, tokens)
+      (expr, tokens)
+    }
     [{ kind: Double(v), .. }, .. tokens] => {
       let expr = AtomExpr::new(Double(v), init_tokens, tokens)
+      (expr, tokens)
+    }
+    [{ kind: Float(v), .. }, .. tokens] => {
+      let expr = AtomExpr::new(Float(v), init_tokens, tokens)
+      (expr, tokens)
+    }
+    [{ kind: Char(c), .. }, .. tokens] => {
+      let expr = AtomExpr::new(Char(c), init_tokens, tokens)
       (expr, tokens)
     }
     [{ kind: Bool(v), .. }, .. tokens] => {

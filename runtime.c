@@ -12,14 +12,32 @@ typedef struct {
 typedef struct {
   int32_t length;
   int32_t capacity; // default: length * 2 + 1
+  int64_t *data;
+} Int64Array;
+
+typedef struct {
+  int32_t length;
+  int32_t capacity; // default: length * 2 + 1
   double *data;
 } DoubleArray;
 
 typedef struct {
   int32_t length;
   int32_t capacity; // default: length * 2 + 1
+  float *data;
+} FloatArray;
+
+typedef struct {
+  int32_t length;
+  int32_t capacity; // default: length * 2 + 1
   uint8_t *data;
 } BoolArray;
+
+typedef struct {
+  int32_t length;
+  int32_t capacity; // default: length * 2 + 1
+  char *data;
+} CharArray;
 
 typedef struct {
   int32_t length;
@@ -43,6 +61,17 @@ IntArray* make_int_array(int32_t length, int32_t init_value) {
   return arr;
 }
 
+Int64Array* make_int64_array(int32_t length, int64_t init_value) {
+  Int64Array *arr = (Int64Array *)malloc(sizeof(Int64Array));
+  arr->length = length;
+  arr->capacity = length * 2 + 1;
+  arr->data = (int64_t *)malloc(arr->capacity * sizeof(int64_t));
+  for (int32_t i = 0; i < length; i++) {
+    arr->data[i] = init_value;
+  }
+  return arr;
+}
+
 DoubleArray* make_double_array(int32_t length, double init_value) {
   DoubleArray *arr = (DoubleArray *)malloc(sizeof(DoubleArray));
   arr->length = length;
@@ -54,11 +83,33 @@ DoubleArray* make_double_array(int32_t length, double init_value) {
   return arr;
 }
 
+FloatArray* make_float_array(int32_t length, float init_value) {
+  FloatArray *arr = (FloatArray *)malloc(sizeof(FloatArray));
+  arr->length = length;
+  arr->capacity = length * 2 + 1;
+  arr->data = (float *)malloc(arr->capacity * sizeof(float));
+  for (int32_t i = 0; i < length; i++) {
+    arr->data[i] = init_value;
+  }
+  return arr;
+}
+
 BoolArray* make_bool_array(int32_t length, uint8_t init_value) {
   BoolArray *arr = (BoolArray *)malloc(sizeof(BoolArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
   arr->data = (uint8_t *)malloc(arr->capacity * sizeof(uint8_t));
+  for (int32_t i = 0; i < length; i++) {
+    arr->data[i] = init_value;
+  }
+  return arr;
+}
+
+CharArray* make_char_array(int32_t length, char init_value) {
+  CharArray *arr = (CharArray *)malloc(sizeof(CharArray));
+  arr->length = length;
+  arr->capacity = length * 2 + 1;
+  arr->data = (char *)malloc(arr->capacity * sizeof(char));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -87,6 +138,14 @@ void array_int_push(IntArray *arr, int32_t value) {
   arr->data[arr->length++] = value;
 }
 
+void array_int64_push(Int64Array *arr, int64_t value) {
+  if (arr->length >= arr->capacity) {
+    arr->capacity = arr->capacity * 2 + 1;
+    arr->data = (int64_t *)realloc(arr->data, arr->capacity * sizeof(int64_t));
+  }
+  arr->data[arr->length++] = value;
+}
+
 void array_double_push(DoubleArray *arr, double value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
@@ -95,10 +154,26 @@ void array_double_push(DoubleArray *arr, double value) {
   arr->data[arr->length++] = value;
 }
 
+void array_float_push(FloatArray *arr, float value) {
+  if (arr->length >= arr->capacity) {
+    arr->capacity = arr->capacity * 2 + 1;
+    arr->data = (float *)realloc(arr->data, arr->capacity * sizeof(float));
+  }
+  arr->data[arr->length++] = value;
+}
+
 void array_bool_push(BoolArray *arr, uint8_t value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
     arr->data = (uint8_t *)realloc(arr->data, arr->capacity * sizeof(uint8_t));
+  }
+  arr->data[arr->length++] = value;
+}
+
+void array_char_push(CharArray *arr, char value) {
+  if (arr->length >= arr->capacity) {
+    arr->capacity = arr->capacity * 2 + 1;
+    arr->data = (char *)realloc(arr->data, arr->capacity * sizeof(char));
   }
   arr->data[arr->length++] = value;
 }
@@ -115,11 +190,23 @@ int array_int_get(IntArray *arr, int32_t index) {
   return arr->data[index];
 }
 
+int64_t array_int64_get(Int64Array *arr, int32_t index) {
+  return arr->data[index];
+}
+
 double array_double_get(DoubleArray *arr, int32_t index) {
   return arr->data[index];
 }
 
+float array_float_get(FloatArray *arr, int32_t index) {
+  return arr->data[index];
+}
+
 uint8_t array_bool_get(BoolArray *arr, int32_t index) {
+  return arr->data[index];
+}
+
+char array_char_get(CharArray *arr, int32_t index) {
   return arr->data[index];
 }
 
@@ -131,11 +218,23 @@ void array_int_put(IntArray *arr, int32_t index, int32_t value) {
   arr->data[index] = value;
 }
 
+void array_int64_put(Int64Array *arr, int32_t index, int64_t value) {
+  arr->data[index] = value;
+}
+
 void array_double_put(DoubleArray *arr, int32_t index, double value) {
   arr->data[index] = value;
 }
 
+void array_float_put(FloatArray *arr, int32_t index, float value) {
+  arr->data[index] = value;
+}
+
 void array_bool_put(BoolArray *arr, int32_t index, uint8_t value) {
+  arr->data[index] = value;
+}
+
+void array_char_put(CharArray *arr, int32_t index, char value) {
   arr->data[index] = value;
 }
 
@@ -212,8 +311,32 @@ void __builtin_println_double(double value) {
   printf("%f\n", value);
 }
 
+void __builtin_println_int64(int64_t value) {
+  printf("%lld\n", (long long)value);
+}
+
+void __builtin_println_float(float value) {
+  printf("%f\n", value);
+}
+
+void __builtin_println_char(char value) {
+  printf("%c\n", value);
+}
+
 void __builtin_print_int(int value) {
   printf("%d", value);
+}
+
+void __builtin_print_int64(int64_t value) {
+  printf("%lld", (long long)value);
+}
+
+void __builtin_print_float(float value) {
+  printf("%f", value);
+}
+
+void __builtin_print_char(char value) {
+  printf("%c", value);
 }
 
 void __builtin_print_bool(uint8_t value) {
@@ -268,8 +391,8 @@ MoonBitStr* __builtin_string_concat(MoonBitStr* str1, MoonBitStr* str2) {
   return result;
 }
 
-int32_t __builtin_get_char_in_string(MoonBitStr* str, int32_t index) {
-  return (int32_t)str->data[index];
+char __builtin_get_char_in_string(MoonBitStr* str, int32_t index) {
+  return str->data[index];
 }
 
 int main() {

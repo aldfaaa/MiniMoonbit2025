@@ -5,9 +5,12 @@ pub fn Context::type_codegen_opaque(
 ) -> &@llvm.Type {
   match knf_type {
     Int => (self.llvm_ctx.getInt32Ty() : &@llvm.Type)
+    Int64 => self.llvm_ctx.getInt64Ty()
     Bool => self.llvm_ctx.getInt1Ty()
     Unit => self.llvm_ctx.getVoidTy()
     Double => self.llvm_ctx.getDoubleTy()
+    Float => self.llvm_ctx.getFloatTy()
+    Char => self.llvm_ctx.getInt8Ty()
     Array(_) => self.llvm_ctx.getPtrTy()
     String(_) => self.llvm_ctx.getPtrTy()
     Tuple(_) => self.llvm_ctx.getPtrTy()
@@ -23,9 +26,12 @@ pub fn Context::type_codegen_concrete(
 ) -> &@llvm.Type raise {
   match knf_type {
     Int => (self.llvm_ctx.getInt32Ty() : &@llvm.Type)
+    Int64 => self.llvm_ctx.getInt64Ty()
     Bool => self.llvm_ctx.getInt1Ty()
     Unit => self.llvm_ctx.getVoidTy()
     Double => self.llvm_ctx.getDoubleTy()
+    Float => self.llvm_ctx.getFloatTy()
+    Char => self.llvm_ctx.getInt8Ty()
     Array(_) => self.llvm_ctx.getPtrTy()
     String(_) => self.llvm_ctx.getPtrTy()
     Tuple(elem_types) => {
