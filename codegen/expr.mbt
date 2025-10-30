@@ -15,34 +15,9 @@ pub fn Context::expr_codegen(
     Bool(true) => self.llvm_ctx.getConstTrue() |> Some
     Bool(false) => self.llvm_ctx.getConstFalse() |> Some
     Double(d) => self.llvm_ctx.getConstDouble(d) |> Some
-    // if name is a top function, we need to make a closure struct
-    // then store the function to this struct's first field
-    // and return the struct pointer
-    Ident(name) if self.is_top_level_function(name) => {
-      guard self.functions.get(name.to_string()) is Some(func_value) else {
-        raise CodegenError(
-          "Failed to get function value for top-level function \{name}",
-        )
-      }
-      let ptrty = self.llvm_ctx.getPtrTy()
-      let zero = self.llvm_ctx.getConstInt32(0)
-      // Create closure struct with only function pointer (no captured vars)
-      let closure_struct_ty = self.llvm_ctx.getStructType([ptrty])
-      let mbt_malloc = self.get_builtin_function("moonbit_malloc")
-      let closure_size = self.llvm_mod
-        .getDataLayout()
-        .getTypeAllocSize(closure_struct_ty)
-      let closure_size = self.llvm_ctx.getConstInt32(closure_size)
-      let closure_ptr = self.builder.createCall(mbt_malloc, [closure_size])
-      // Set function pointer in the first field
-      let func_ptr_ptr = self.builder.createGEP(
-        closure_ptr,
-        closure_struct_ty,
-        [zero, zero],
-      )
-      let _ = self.builder.createStore(func_value, func_ptr_ptr)
-      Some(closure_ptr)
-    }
+    // if name is a top function, we need to make a closure wrapper
+    Ident(name) if self.is_top_level_function(name) =>
+      Some(self.generate_top_level_function_closure(name))
     Ident(name) => self.get_value_by_name_or_load(name) |> Some
     String(s) => {
       let s = self.builder.createGlobalString(s, name="str_lit_\{self.str_cnt}")
@@ -110,31 +85,9 @@ pub fn Context::expr_codegen(
     //     `make_bool_array`, or
     //     `make_ptr_array`
     ArrayMake(size_name, init_name) => {
-      // For top-level functions, we need to create a closure first
+      // For top-level functions, we need to create a closure wrapper first
       let init_value : &@llvm.Value = if self.is_top_level_function(init_name) {
-        guard self.functions.get(init_name.to_string()) is Some(func_value) else {
-          raise CodegenError(
-            "Failed to get function value for top-level function \{init_name}",
-          )
-        }
-        let ptrty = self.llvm_ctx.getPtrTy()
-        let zero = self.llvm_ctx.getConstInt32(0)
-        // Create closure struct with only function pointer (no captured vars)
-        let closure_struct_ty = self.llvm_ctx.getStructType([ptrty])
-        let mbt_malloc = self.get_builtin_function("moonbit_malloc")
-        let closure_size = self.llvm_mod
-          .getDataLayout()
-          .getTypeAllocSize(closure_struct_ty)
-        let closure_size = self.llvm_ctx.getConstInt32(closure_size)
-        let closure_ptr = self.builder.createCall(mbt_malloc, [closure_size])
-        // Set function pointer in the first field
-        let func_ptr_ptr = self.builder.createGEP(
-          closure_ptr,
-          closure_struct_ty,
-          [zero, zero],
-        )
-        let _ = self.builder.createStore(func_value, func_ptr_ptr)
-        (closure_ptr : &@llvm.Value)
+        self.generate_top_level_function_closure(init_name)
       } else {
         self.get_value_by_name_or_load(init_name)
       }
@@ -400,22 +353,15 @@ pub fn Context::expr_codegen(
       let v = self.builder.createLoad(elem_llvm_type, elem_ptr)
       Some(v)
     }
-    // Note: all funcs defined in our program are handled in closure conversion
-    // which means the function is actually a struct with the first field being
-    // a function pointer and the rest being the closure environment.
-    // when we call, we get the function pointer from the struct,
-    // push the struct pointer as the first argument, then the rest arguments.
+    // Top level functions are now called directly without closure environment pointer
     Call(fname, arg_names) if self.is_top_level_function(fname) => {
       guard self.functions.get(fname.to_string()) is Some(func_value) else {
         raise CodegenError(
           "Failed to get function value for top-level function \{fname}",
         )
       }
-      let ptr_null = self.llvm_ctx.getConstPointerNull(self.llvm_ctx.getPtrTy())
       let arg_values = arg_names.map(n => self.get_value_by_name_or_load(n))
-      let all_args : Array[&@llvm.Value] = Array::new()
-      all_args..push(ptr_null)..append(arg_values)
-      let v = self.builder.createCall(func_value, all_args)
+      let v = self.builder.createCall(func_value, arg_values)
       Some(v)
     }
     // In this case, fname is a closure struct, the first field is the function pointer

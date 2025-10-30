@@ -12,7 +12,7 @@ pub fn Context::top_function_codegen(
   if func.name != "main" {
     for i, param in func.params {
       let (param_name, param_type) = param
-      let llvm_arg = fval.getArg(i + 1).unwrap() // +1 for closure environment
+      let llvm_arg = fval.getArg(i).unwrap() // No closure environment pointer anymore
       self.name_values.set(param_name, llvm_arg)
       self.name_types.set(param_name, param_type)
     }

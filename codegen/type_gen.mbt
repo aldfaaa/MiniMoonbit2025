@@ -75,13 +75,10 @@ pub fn Context::collect_func_values(
   self : Context,
   knf_funcs : Map[String, @knf.KnfFunction],
 ) -> Unit raise {
-  let ptrty = self.llvm_ctx.getPtrTy()
   for fname, func in knf_funcs {
     let { params, ret_ty, .. } = func
     let param_types : Array[&@llvm.Type] = Array::new()
-    if fname != "main" {
-      param_types.push(ptrty) // for closure environment
-    }
+    // Top level functions no longer need closure environment pointer
     for param in params {
       let (_, param_type) = param
       let llvm_param_type = match param_type {
