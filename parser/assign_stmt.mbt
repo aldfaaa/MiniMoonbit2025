@@ -33,6 +33,7 @@ pub fn parse_assign_stmt(
 ) -> (AssignStmt, ArrayView[Token]) raise ParseError {
   let (left_value, tokens) = parse_left_value(tokens)
   guard tokens is [{ kind: AssignOp(op), .. }, .. tokens] else {
+    @lexer.throw_(tokens[0], "Parse Error: Expect an assign operator", Error)
     raise ParseError("Expect an assign operator")
   }
   let op = AssignOp::from_tok_assign_op(op)
@@ -42,8 +43,11 @@ pub fn parse_assign_stmt(
     tokens
   } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
     tokens
+  } else if tokens is [{ kind: Bracket('}'), .. }, ..] {
+    tokens
   } else {
-    raise ParseError("Expect ';' or newline after assign statement")
+    @lexer.throw_(tokens[0], "Parse Error: Expect ';' or '} or newline after assign statement", Error)
+    raise ParseError("Expect ';' or '}' or newline after assign statement")
   }
   (assign_stmt, tokens)
 }

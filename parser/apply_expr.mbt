@@ -12,6 +12,11 @@ pub(all) enum ApplyExprKind {
   Call(ApplyExpr, Array[Expr])
 } derive(Show, Eq)
 
+fn ApplyExpr::unit() -> ApplyExpr {
+  let atom_unit = AtomExpr::unit()
+  ApplyExpr::{ kind: AtomExpr(atom_unit), toks: atom_unit.toks }
+}
+
 ///|
 pub fn ApplyExpr::new(
   kind : ApplyExprKind,
@@ -38,6 +43,7 @@ pub fn parse_apply_expr(
     [{ kind: Bracket('['), .. }, .. tokens] => {
       let (index_expr, tokens) = parse_expr(tokens)
       guard tokens is [{ kind: Bracket(']'), .. }, .. tokens] else {
+        @lexer.throw_(tokens[0], "ParseError: Expect ']'", Error)
         raise ParseError("Expect ']'")
       }
       apply_expr = ApplyExpr::new(
@@ -58,6 +64,7 @@ pub fn parse_apply_expr(
     [{ kind: Bracket('('), .. }, .. tokens] => {
       let (args, tokens) = parse_expr_list(tokens)
       guard tokens is [{ kind: Bracket(')'), .. }, .. tokens] else {
+        @lexer.throw_(tokens[0], "ParseError: Expect ')'", Error)
         raise ParseError("Expect ')'")
       }
       apply_expr = ApplyExpr::new(

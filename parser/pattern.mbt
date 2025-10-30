@@ -23,7 +23,7 @@ pub fn parse_pattern(
       let pattern = Pattern::{ kind: Ident(ident) }
       (pattern, tokens)
     }
-    [{ kind: Bracket('('), .. }, .. tokens] => {
+    [{ kind: Bracket('('), .. } as tok, .. tokens] => {
       let patterns : Array[Pattern] = Array::new()
       let tokens = loop tokens {
         [{ kind: Bracket(')'), .. }, .. tokens] => break tokens
@@ -44,9 +44,11 @@ pub fn parse_pattern(
         tokens => raise ParseError("InValid Pattern: \{tokens[0]}")
       }
       let kind = if patterns.length() == 0 {
+        @lexer.throw_(tok, "Parse Error: InValid Pattern", Error)
         raise ParseError("InValid Pattern")
       } else if patterns.length() == 1 {
-        raise ParseError("InValid Pattern, must over 1 pattern for tuple")
+        @lexer.throw_(tok, "Warning: Should Not use tuple pattern for single pattern", Warning)
+        patterns[0].kind
       } else {
         PatternKind::Tuple(patterns)
       }
@@ -57,6 +59,9 @@ pub fn parse_pattern(
       println("Compiler ICE: Empty Token ArrayView")
       panic()
     }
-    _ => raise ParseError("InValid Pattern")
+    [tok, ..] => {
+      @lexer.throw_(tok, "Parse Error: InValid Pattern", Error)
+      raise ParseError("InValid Pattern")
+    }
   }
 }

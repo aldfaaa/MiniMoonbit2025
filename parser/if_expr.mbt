@@ -22,6 +22,7 @@ pub fn parse_if_expr(
       (Some(Either::Left(else_if)), tokens)
     } else {
       guard tokens is [{ kind: Bracket('{'), .. }, ..] else {
+        @lexer.throw_(tokens[0], "Parse Error: Expect '{' after else", Error)
         raise ParseError("Expect '{' after else")
       }
       let (else_block, tokens) = parse_block_expr(tokens)

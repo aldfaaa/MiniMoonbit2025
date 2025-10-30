@@ -14,6 +14,11 @@ pub(all) enum ExprKind {
   IfExpr(IfExpr)
 } derive(Show, Eq)
 
+fn Expr::unit() -> Expr {
+  let apply_unit = ApplyExpr::unit()
+  Expr::{ kind: ApplyExpr(apply_unit), toks: apply_unit.toks }
+}
+
 ///|
 pub fn Expr::new(
   kind : ExprKind,

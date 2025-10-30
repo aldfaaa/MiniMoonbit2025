@@ -14,6 +14,7 @@ pub(all) enum StmtKind {
   ExprStmt(Expr)
   ReturnStmt(Expr?)
   LocalFunction(LocalFunction)
+  NoopStmt  // For Error Recovery
 } derive(Show, Eq)
 
 pub fn Stmt::new(
@@ -29,16 +30,20 @@ pub fn Stmt::new(
 ///|
 pub fn parse_stmt(
   tokens : ArrayView[Token],
-) -> (Stmt, ArrayView[Token]) raise ParseError {
+) -> (Stmt, ArrayView[Token]) {
   let init_tokens = tokens
   match tokens {
     [{ kind: Keyword(Let), .. }, { kind: Keyword(Mut), .. }, ..] as tokens => {
-      let (let_mut_stmt, rest) = parse_let_mut_stmt(tokens)
+      let (let_mut_stmt, rest) = parse_let_mut_stmt(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(LetMutStmt(let_mut_stmt), init_tokens, rest)
       (stmt, rest)
     }
     [{ kind: Keyword(Let), .. }, ..] as tokens => {
-      let (let_stmt, rest) = parse_let_stmt(tokens)
+      let (let_stmt, rest) = parse_let_stmt(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(LetStmt(let_stmt), init_tokens, rest)
       (stmt, rest)
     }
@@ -52,13 +57,16 @@ pub fn parse_stmt(
         // New line after return keyword means no expression
         (None, tokens)
       } else {
-        let (expr, tokens) = parse_expr(tokens)
+        let (expr, tokens) = parse_expr(tokens) catch {
+          _ => return next_stmt_check_point_with_noop(tokens)
+        }
         let tokens = if tokens is [{ kind: Symbol(";"), .. }, .. tokens] {
           tokens
         } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
           tokens
         } else {
-          raise ParseError("Expect ';' or newline after return statement")
+          @lexer.throw_(tokens[0], "Parse Error: Expected ';' or a newline after return statement", Error)
+          next_stmt_check_point(tokens)
         }
         (Some(expr), tokens)
       }
@@ -72,13 +80,19 @@ pub fn parse_stmt(
     // Hence need to parse a left value first and
     // check if it's followed by an assignment operator.
     [{ kind: Lower(_), .. }, ..] as tokens => {
-      let (_, rest) = parse_left_value(tokens)
+      let (_, rest) = parse_left_value(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       if rest is [{ kind: AssignOp(_), .. }, ..] {
-        let (assign_stmt, rest) = parse_assign_stmt(tokens)
+        let (assign_stmt, rest) = parse_assign_stmt(tokens) catch {
+          _ => return next_stmt_check_point_with_noop(tokens)
+        }
         let stmt = Stmt::new(StmtKind::AssignStmt(assign_stmt), init_tokens, rest)
         (stmt, rest)
       } else {
-        let (expr, rest) = parse_expr(tokens)
+        let (expr, rest) = parse_expr(tokens) catch {
+          _ => return next_stmt_check_point_with_noop(tokens)
+        }
         let stmt = Stmt::new(StmtKind::ExprStmt(expr), init_tokens, rest)
         let rest = if rest is [{ kind: Symbol(";"), .. }, .. rest] {
           rest
@@ -88,23 +102,30 @@ pub fn parse_stmt(
           // Allow newline after expression statement
           rest
         } else {
-          raise ParseError("Expected ';' or a newline after expression statement")
+          @lexer.throw_(rest[0], "Parse Error: Expected ';' or a newline after expression statement", Error)
+          next_stmt_check_point(rest)
         }
         (stmt, rest)
       }
     }
     [{ kind: Keyword(While), .. }, ..] as tokens => {
-      let (while_stmt, rest) = parse_while_stmt(tokens)
+      let (while_stmt, rest) = parse_while_stmt(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(StmtKind::WhileStmt(while_stmt), init_tokens, rest)
       (stmt, rest)
     }
     [{ kind: Keyword(Fn), .. }, ..] as tokens => {
-      let (local_function, rest) = parse_local_function(tokens)
+      let (local_function, rest) = parse_local_function(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(StmtKind::LocalFunction(local_function), init_tokens, rest)
       (stmt, rest)
     }
     [{ kind: Keyword(For), .. }, ..] as tokens => {
-      let (for_stmt, rest) = parse_for_stmt(tokens)
+      let (for_stmt, rest) = parse_for_stmt(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(StmtKind::ForStmt(for_stmt), init_tokens, rest)
       (stmt, rest)
     }
@@ -113,7 +134,9 @@ pub fn parse_stmt(
       panic()
     }
     tokens => {
-      let (expr, rest) = parse_expr(tokens)
+      let (expr, rest) = parse_expr(tokens) catch {
+        _ => return next_stmt_check_point_with_noop(tokens)
+      }
       let stmt = Stmt::new(StmtKind::ExprStmt(expr), init_tokens, rest)
       let rest = if rest is [{ kind: Symbol(";"), .. }, .. rest] {
         rest
@@ -123,9 +146,29 @@ pub fn parse_stmt(
         // Allow newline after expression statement
         rest
       } else {
-        raise ParseError("Expected ';' after expression statement")
+        @lexer.throw_(rest[0], "Parse Error: Expected ';' or a newline after expression statement", Error)
+        next_stmt_check_point(rest)
       }
       (stmt, rest)
     }
   }
+}
+
+fn next_stmt_check_point(tokens: ArrayView[Token]) -> ArrayView[Token] {
+  let line = tokens[0].line
+  loop tokens {
+    [{ kind: Symbol(";"), .. }, .. tokens] => break tokens
+    [tok, ..] as tokens if tok.line != line => break tokens
+    [{ kind: Bracket('}'), .. }, ..] as tokens => break tokens
+    [{ kind: Bracket('{'), .. }, ..] as tokens => break tokens
+    [] as tokens => break tokens
+    [_, .. tokens] => continue tokens
+  }
+}
+
+fn next_stmt_check_point_with_noop(tokens: ArrayView[Token]) -> (Stmt, ArrayView[Token]) {
+  let rest = next_stmt_check_point(tokens)
+  let noop_stmt = StmtKind::NoopStmt
+  let stmt = Stmt::new(noop_stmt, tokens, rest)
+  (stmt, rest)
 }

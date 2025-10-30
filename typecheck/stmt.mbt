@@ -70,5 +70,8 @@ pub fn Context::check_stmt(
       let checked_local_function = self.check_local_function(local_function)
       Stmt::{ kind: LocalFunction(checked_local_function) }
     }
+    NoopStmt => {
+      raise TypeCheckError("Error happened in Parser Phase")
+    }
   }
 }

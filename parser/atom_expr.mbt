@@ -22,6 +22,11 @@ pub(all) enum AtomExprKind {
   StructConstruct(StructConstructExpr) // StructName::{ field: expr, ... }
 } derive(Show, Eq)
 
+fn AtomExpr::unit() -> AtomExpr {
+  let kind = AtomExprKind::Unit
+  AtomExpr::{ kind, toks: [] }
+}
+
 ///|
 pub fn AtomExpr::new(
   kind : AtomExprKind,
@@ -80,7 +85,12 @@ pub fn parse_atom_expr(
       println("Compiler ICE: Empty Token ArrayView")
       panic()
     }
-    tokens => raise ParseError("InValid Atom Expression, \{tokens[0:5]}")
+    [tok, ..] => {
+      let msg = "Parse Error: InValid Atom Expression" + 
+      " Expect Int, Float, Char, Bool, String, Ident, '(', '[' or Struct Construct"
+      @lexer.throw_(tok, msg, Error)
+      raise ParseError("InValid Atom Expression")
+    }
   }
 }
 
@@ -140,10 +150,20 @@ fn parse_array_make_expr(
   }
   let (size_expr, tokens) = parse_expr(tokens)
   guard tokens is [{ kind: Symbol(","), .. }, .. tokens] else {
+    @lexer.throw_(
+      tokens[0],
+      "Parse Error: Expected ',' after size expression in Array::make",
+      Error,
+    )
     raise ParseError("Expected ',' after size expression in Array::make")
   }
   let (init_expr, tokens) = parse_expr(tokens)
   guard tokens is [{ kind: Bracket(')'), .. }, .. tokens] else {
+    @lexer.throw_(
+      tokens[0],
+      "Parse Error: Expected ')' after init expression in Array::make",
+      Error,
+    )
     raise ParseError("Expected ')' after init expression in Array::make")
   }
   let atom_expr = AtomExpr::new(

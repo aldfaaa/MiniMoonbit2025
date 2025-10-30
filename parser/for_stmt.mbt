@@ -67,14 +67,21 @@ pub fn parse_for_stmt(
       continue rest
     }
     [{ kind: Symbol(";"), .. }, .. tokens] => break tokens
-    _ =>
+    [] => {
+      println("Compiler ICE: Incomplete for statement")
+      panic()
+    }
+    [tok, ..] => {
+      @lexer.throw_(tok, "Parse Error: Invalid init statement in for loop", Error)
       raise ParseError("Invalid init statement in for loop")
+    }
   }
   let (cond, tokens) = if tokens is [{ kind: Symbol(";"), .. }, .. tokens] {
     (None, tokens[1:])
   } else {
     let (expr, tokens) = parse_expr(tokens)
     guard tokens is [{ kind: Symbol(";"), .. }, ..tokens] else {
+      @lexer.throw_(tokens[0], "Parse Error: Failed Parsing For Stmt, Expect ';'", Error)
       raise ParseError("Failed Parsing For Stmt, Expect ';'")
     }
     (Some(expr), tokens)
@@ -99,8 +106,14 @@ pub fn parse_for_stmt(
       continue rest
     }
     [{ kind: Bracket('{'), .. }, ..] as tokens => break tokens
-    _ =>
+    [] => {
+      println("Compiler ICE: Incomplete for statement")
+      panic()
+    }
+    [tok, ..] => {
+      @lexer.throw_(tok, "Parse Error: Invalid step statement in for loop", Error)
       raise ParseError("Invalid step statement in for loop")
+    }
   }
   let (body, tokens) = parse_block_expr(tokens)
   let for_stmt = ForStmt::{ inits, cond, steps, body }

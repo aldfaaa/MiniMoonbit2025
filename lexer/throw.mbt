@@ -10,7 +10,7 @@ pub fn throw_(tok: Token, msg: String, level: ThrowLevel) -> Unit {
 
   // 第一行：文件名、行号和列号
   let head_line = taint(
-    "[\{file}:\{line}:\{col}] Error:",
+    "[\{file}:\{line}:\{col}] \{level}:",
     Magenta,
   )
   str_builder.write_string("\{head_line}\n")
@@ -42,7 +42,7 @@ pub fn throw_(tok: Token, msg: String, level: ThrowLevel) -> Unit {
 pub(all) enum ThrowLevel {
   Error
   Warning
-}
+} derive(Show)
 
 fn get_code_line(code: String, line : Int) -> String {
   let mut lineno = line

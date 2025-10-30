@@ -21,7 +21,18 @@ pub fn parse_let_stmt(
     (None, tokens)
   }
   guard tokens is [{ kind: AssignOp(Assign), .. }, .. tokens] else {
-    raise ParseError("Expect '='")
+    @lexer.throw_(tokens[0], "Parse Error: Expect '='", Error)
+    let line = tokens[0].line
+    let rest = loop tokens {
+      [{ kind: Symbol(";"), .. }, .. tokens] => break tokens
+      [tok, ..] as tokens if tok.line != line => break tokens
+      [{ kind: Bracket('}'), .. }, ..] as tokens => break tokens
+      [] as tokens => break tokens
+      [_, .. tokens] => continue tokens
+    }
+    let expr = Expr::unit()
+    let let_stmt = LetStmt::{ pattern, ty, expr }
+    return (let_stmt, rest)
   }
   let (expr, tokens) = parse_expr(tokens)
   let let_stmt = LetStmt::{ pattern, ty, expr }
@@ -29,8 +40,11 @@ pub fn parse_let_stmt(
     tokens
   } else if tokens is [tok, ..] && tok.line != expr.toks[expr.toks.length() - 1].line {
     tokens
+  } else if tokens is [{ kind: Bracket('}'), .. }, ..] {
+    tokens
   } else {
-    raise ParseError("Expect ';' or newline after let statement")
+    @lexer.throw_(tokens[0], "Parse Error: Expect ';' or '}' or newline after let statement", Error)
+    raise ParseError("Expect ';' or '}' or newline after let statement")
   }
   (let_stmt, tokens)
 }
