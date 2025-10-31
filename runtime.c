@@ -50,11 +50,15 @@ typedef struct {
   int32_t length;
 } MoonBitStr;
 
+void* moonbit_malloc(int32_t size) {
+  return malloc(size);
+}
+
 IntArray* make_int_array(int32_t length, int32_t init_value) {
-  IntArray *arr = (IntArray *)malloc(sizeof(IntArray));
+  IntArray *arr = (IntArray *)moonbit_malloc(sizeof(IntArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (int32_t *)malloc(arr->capacity * sizeof(int32_t));
+  arr->data = (int32_t *)moonbit_malloc(arr->capacity * sizeof(int32_t));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -62,10 +66,10 @@ IntArray* make_int_array(int32_t length, int32_t init_value) {
 }
 
 Int64Array* make_int64_array(int32_t length, int64_t init_value) {
-  Int64Array *arr = (Int64Array *)malloc(sizeof(Int64Array));
+  Int64Array *arr = (Int64Array *)moonbit_malloc(sizeof(Int64Array));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (int64_t *)malloc(arr->capacity * sizeof(int64_t));
+  arr->data = (int64_t *)moonbit_malloc(arr->capacity * sizeof(int64_t));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -73,10 +77,10 @@ Int64Array* make_int64_array(int32_t length, int64_t init_value) {
 }
 
 DoubleArray* make_double_array(int32_t length, double init_value) {
-  DoubleArray *arr = (DoubleArray *)malloc(sizeof(DoubleArray));
+  DoubleArray *arr = (DoubleArray *)moonbit_malloc(sizeof(DoubleArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (double *)malloc(arr->capacity * sizeof(double));
+  arr->data = (double *)moonbit_malloc(arr->capacity * sizeof(double));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -84,10 +88,10 @@ DoubleArray* make_double_array(int32_t length, double init_value) {
 }
 
 FloatArray* make_float_array(int32_t length, float init_value) {
-  FloatArray *arr = (FloatArray *)malloc(sizeof(FloatArray));
+  FloatArray *arr = (FloatArray *)moonbit_malloc(sizeof(FloatArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (float *)malloc(arr->capacity * sizeof(float));
+  arr->data = (float *)moonbit_malloc(arr->capacity * sizeof(float));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -95,10 +99,10 @@ FloatArray* make_float_array(int32_t length, float init_value) {
 }
 
 BoolArray* make_bool_array(int32_t length, uint8_t init_value) {
-  BoolArray *arr = (BoolArray *)malloc(sizeof(BoolArray));
+  BoolArray *arr = (BoolArray *)moonbit_malloc(sizeof(BoolArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (uint8_t *)malloc(arr->capacity * sizeof(uint8_t));
+  arr->data = (uint8_t *)moonbit_malloc(arr->capacity * sizeof(uint8_t));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -106,10 +110,10 @@ BoolArray* make_bool_array(int32_t length, uint8_t init_value) {
 }
 
 CharArray* make_char_array(int32_t length, char init_value) {
-  CharArray *arr = (CharArray *)malloc(sizeof(CharArray));
+  CharArray *arr = (CharArray *)moonbit_malloc(sizeof(CharArray));
   arr->length = length;
   arr->capacity = length * 2 + 1;
-  arr->data = (char *)malloc(arr->capacity * sizeof(char));
+  arr->data = (char *)moonbit_malloc(arr->capacity * sizeof(char));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -117,9 +121,9 @@ CharArray* make_char_array(int32_t length, char init_value) {
 }
 
 PtrArray* make_ptr_array(int32_t length, void *init_value) {
-  PtrArray *arr = (PtrArray *)malloc(sizeof(PtrArray));
+  PtrArray *arr = (PtrArray *)moonbit_malloc(sizeof(PtrArray));
   arr->length = length;
-  arr->data = (void **)malloc(length * sizeof(void *));
+  arr->data = (void **)moonbit_malloc(length * sizeof(void *));
   for (int32_t i = 0; i < length; i++) {
     arr->data[i] = init_value;
   }
@@ -263,10 +267,6 @@ void print_string(MoonBitStr *str) {
   printf("%s", str->data);
 }
 
-void* moonbit_malloc(int32_t size) {
-  return malloc(size);
-}
-
 int int_of_float(double value) {
   return (int)value;
 }
@@ -359,13 +359,13 @@ void __builtin_print_double(double value) {
 }
 
 MoonBitStr* __builtin_create_string(const char* str) {
-  MoonBitStr *moonbit_str = (MoonBitStr *)malloc(sizeof(MoonBitStr));
+  MoonBitStr *moonbit_str = (MoonBitStr *)moonbit_malloc(sizeof(MoonBitStr));
   int len = 0;
   while (str[len] != '\0') {
     len++;
   }
   moonbit_str->length = len;
-  moonbit_str->data = (char *)malloc((len + 1) * sizeof(char));
+  moonbit_str->data = (char *)moonbit_malloc((len + 1) * sizeof(char));
   for (int i = 0; i < len; i++) {
     moonbit_str->data[i] = str[i];
   }
@@ -378,9 +378,9 @@ int32_t __builtin_get_string_length(MoonBitStr* str) {
 }
 
 MoonBitStr* __builtin_string_concat(MoonBitStr* str1, MoonBitStr* str2) {
-  MoonBitStr *result = (MoonBitStr *)malloc(sizeof(MoonBitStr));
+  MoonBitStr *result = (MoonBitStr *)moonbit_malloc(sizeof(MoonBitStr));
   result->length = str1->length + str2->length;
-  result->data = (char *)malloc((result->length + 1) * sizeof(char));
+  result->data = (char *)moonbit_malloc((result->length + 1) * sizeof(char));
   for (int i = 0; i < str1->length; i++) {
     result->data[i] = str1->data[i];
   }
