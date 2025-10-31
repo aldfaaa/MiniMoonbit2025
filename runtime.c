@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <gc.h>
 
 typedef struct {
   int32_t length;
@@ -51,7 +52,11 @@ typedef struct {
 } MoonBitStr;
 
 void* moonbit_malloc(int32_t size) {
-  return malloc(size);
+  return GC_MALLOC(size);
+}
+
+void* moonbit_realloc(void *ptr, size_t size) {
+  return GC_REALLOC(ptr, size);
 }
 
 IntArray* make_int_array(int32_t length, int32_t init_value) {
@@ -137,7 +142,7 @@ int32_t get_array_length(void *array) {
 void array_int_push(IntArray *arr, int32_t value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (int32_t *)realloc(arr->data, arr->capacity * sizeof(int32_t));
+    arr->data = (int32_t *)moonbit_realloc(arr->data, arr->capacity * sizeof(int32_t));
   }
   arr->data[arr->length++] = value;
 }
@@ -145,7 +150,7 @@ void array_int_push(IntArray *arr, int32_t value) {
 void array_int64_push(Int64Array *arr, int64_t value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (int64_t *)realloc(arr->data, arr->capacity * sizeof(int64_t));
+    arr->data = (int64_t *)moonbit_realloc(arr->data, arr->capacity * sizeof(int64_t));
   }
   arr->data[arr->length++] = value;
 }
@@ -153,7 +158,7 @@ void array_int64_push(Int64Array *arr, int64_t value) {
 void array_double_push(DoubleArray *arr, double value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (double *)realloc(arr->data, arr->capacity * sizeof(double));
+    arr->data = (double *)moonbit_realloc(arr->data, arr->capacity * sizeof(double));
   }
   arr->data[arr->length++] = value;
 }
@@ -161,7 +166,7 @@ void array_double_push(DoubleArray *arr, double value) {
 void array_float_push(FloatArray *arr, float value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (float *)realloc(arr->data, arr->capacity * sizeof(float));
+    arr->data = (float *)moonbit_realloc(arr->data, arr->capacity * sizeof(float));
   }
   arr->data[arr->length++] = value;
 }
@@ -169,7 +174,7 @@ void array_float_push(FloatArray *arr, float value) {
 void array_bool_push(BoolArray *arr, uint8_t value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (uint8_t *)realloc(arr->data, arr->capacity * sizeof(uint8_t));
+    arr->data = (uint8_t *)moonbit_realloc(arr->data, arr->capacity * sizeof(uint8_t));
   }
   arr->data[arr->length++] = value;
 }
@@ -177,7 +182,7 @@ void array_bool_push(BoolArray *arr, uint8_t value) {
 void array_char_push(CharArray *arr, char value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (char *)realloc(arr->data, arr->capacity * sizeof(char));
+    arr->data = (char *)moonbit_realloc(arr->data, arr->capacity * sizeof(char));
   }
   arr->data[arr->length++] = value;
 }
@@ -185,7 +190,7 @@ void array_char_push(CharArray *arr, char value) {
 void array_ptr_push(PtrArray *arr, void *value) {
   if (arr->length >= arr->capacity) {
     arr->capacity = arr->capacity * 2 + 1;
-    arr->data = (void **)realloc(arr->data, arr->capacity * sizeof(void *));
+    arr->data = (void **)moonbit_realloc(arr->data, arr->capacity * sizeof(void *));
   }
   arr->data[arr->length++] = value;
 }
@@ -427,6 +432,7 @@ MoonBitStr* __builtin_char_to_string(char value) {
 }
 
 int main() {
+  GC_INIT();
   moonbit_main();
   return 0;
 }

@@ -86,7 +86,7 @@ def test_file(mbt_file):
             return False
         
         # 步骤 2: 使用 clang 编译
-        clang_cmd = f"clang {ll_file} runtime.c -lm -o {exe_file}"
+        clang_cmd = f"clang {ll_file} runtime.c -I/opt/homebrew/opt/bdw-gc/include -L/opt/homebrew/opt/bdw-gc/lib -lgc -lm -o {exe_file}"
         print(f"  链接: {clang_cmd}")
         returncode, stdout, stderr = run_command(clang_cmd)
         
