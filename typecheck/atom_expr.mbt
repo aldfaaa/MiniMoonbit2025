@@ -66,7 +66,8 @@ pub fn Context::check_atom_expr(
           { kind: TypeKind::Unit, mutable: false }
         }
       }
-      (Ident(name), ty.kind)
+      // Use the mangled name (whole_name) instead of just name
+      (Ident(whole_name), ty.kind)
     }
     Paren(expr) => {
       let typed_expr = self.check_expr(expr)

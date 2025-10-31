@@ -52,10 +52,11 @@ pub fn Context::program_to_knf(
 
   // Third, register all function signatures in globals
   // so that top_let expressions can reference them
-  for fname, func in prog.top_functions {
+  for _, func in prog.top_functions {
     let param_types = func.param_list.map(fn(p) { self.typekind_to_knf(p.ty) })
     let ret_ty = self.typekind_to_knf(func.ret_ty)
-    self.globals.set(fname, Function(param_types, ret_ty))
+    // Use func.fname which is the mangled name (e.g., Vec2$$new)
+    self.globals.set(func.fname, Function(param_types, ret_ty))
   }
 
   // Fourth, process top-level let declarations
@@ -65,9 +66,10 @@ pub fn Context::program_to_knf(
   }
 
   // Finally, process function bodies
-  for fname, func in prog.top_functions {
+  for _, func in prog.top_functions {
     let knf_func = self.top_function_to_knf(func)
-    functions.set(fname, knf_func)
+    // Use func.fname which is the mangled name (e.g., Vec2$$new)
+    functions.set(func.fname, knf_func)
   }
   let global_stmts = self.global_stmts
   KnfProgram::{ struct_defs, externs, top_lets, global_stmts, functions }

@@ -20,7 +20,9 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
     }
     [{ kind: Keyword(Fn), .. }, ..] as tokens => {
       let (top_fn, rest) = parse_top_function(tokens)
-      top_functions.set(top_fn.fname, top_fn)
+      // Use whole_name() to avoid conflicts between methods with the same name
+      // e.g., Point::new and Rect::new should be stored as different functions
+      top_functions.set(top_fn.whole_name(), top_fn)
       continue rest
     }
     [{ kind: Keyword(Let), .. }, ..] as tokens => {

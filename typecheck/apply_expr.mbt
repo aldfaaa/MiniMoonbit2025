@@ -183,6 +183,106 @@ pub fn Context::check_apply_expr(
         None => ()
       }
       
+      // Handle struct method calls
+      if checked_base_expr.ty is Struct(struct_name) {
+        guard self.struct_defs.get(struct_name) is Some(struct_def) else {
+          let msg = "Undefined struct type: \{struct_name}"
+          self.throw_(apply_expr.toks[0], msg, Error)
+          return ApplyExpr::{
+            kind: Call(
+              ApplyExpr::{ 
+                kind: FieldAccess(checked_base_expr, method_name), 
+                ty: TypeKind::Unit,
+                toks: apply_expr.toks,
+              },
+              arg_exprs.map(e => self.check_expr(e))
+            ),
+            ty: TypeKind::Unit,
+            toks: apply_expr.toks,
+          }
+        }
+        
+        guard struct_def.methods.get(method_name) is Some(method_ty) else {
+          let msg = "Struct \{struct_name} does not have method: \{method_name}"
+          self.throw_(apply_expr.toks[0], msg, Error)
+          return ApplyExpr::{
+            kind: Call(
+              ApplyExpr::{ 
+                kind: FieldAccess(checked_base_expr, method_name), 
+                ty: TypeKind::Unit,
+                toks: apply_expr.toks,
+              },
+              arg_exprs.map(e => self.check_expr(e))
+            ),
+            ty: TypeKind::Unit,
+            toks: apply_expr.toks,
+          }
+        }
+        
+        // method_ty should be Function([Struct(...), ...], ret_ty)
+        guard method_ty is Function(method_param_tys, method_ret_ty) else {
+          let msg = "Invalid method type for \{struct_name}::\{method_name}"
+          self.throw_(apply_expr.toks[0], msg, Error)
+          return ApplyExpr::{
+            kind: Call(
+              ApplyExpr::{ 
+                kind: FieldAccess(checked_base_expr, method_name), 
+                ty: TypeKind::Unit,
+                toks: apply_expr.toks,
+              },
+              arg_exprs.map(e => self.check_expr(e))
+            ),
+            ty: TypeKind::Unit,
+            toks: apply_expr.toks,
+          }
+        }
+        
+        // Check argument count (excluding self parameter)
+        if arg_exprs.length() + 1 != method_param_tys.length() {
+          let msg = "Method \{struct_name}::\{method_name} expects \{method_param_tys.length() - 1} arguments, got \{arg_exprs.length()}"
+          self.throw_(apply_expr.toks[0], msg, Error)
+        }
+        
+        // Check and collect all arguments (self + user provided args)
+        let all_args = Array::new()
+        let base_as_expr = Expr::{ 
+          kind: ExprKind::ApplyExpr(checked_base_expr), 
+          ty: checked_base_expr.ty,
+          toks: checked_base_expr.toks,
+        }
+        all_args.push(base_as_expr)
+        
+        for i in 0..<arg_exprs.length() {
+          let arg_expr = self.check_expr(arg_exprs[i])
+          if i + 1 < method_param_tys.length() {
+            let expected_ty = method_param_tys[i + 1]
+            if !self.is_type_compatible(arg_expr.ty, expected_ty) {
+              let msg = "Method argument type mismatch, expected \{expected_ty}, got \{arg_expr.ty}"
+              self.throw_(arg_expr.toks[0], msg, Error)
+            }
+          }
+          all_args.push(arg_expr)
+        }
+        
+        // Create call to StructName$$method_name
+        let mangled_name = "\{struct_name}$$\{method_name}"
+        let method_func = ApplyExpr::{
+          kind: AtomExpr(AtomExpr::{ 
+            kind: AtomExprKind::Ident(mangled_name), 
+            ty: method_ty,
+            toks: apply_expr.toks,
+          }),
+          ty: method_ty,
+          toks: apply_expr.toks,
+        }
+        
+        return ApplyExpr::{
+          kind: Call(method_func, all_args),
+          ty: method_ret_ty,
+          toks: apply_expr.toks,
+        }
+      }
+      
       // 如果不是已知的 method call，报错
       let msg = "Unknown method: \{method_name} for type: \{checked_base_expr.ty}"
       self.throw_(apply_expr.toks[0], msg, Error)
@@ -282,10 +382,22 @@ fn handle_primitive_method_call(
   arg_exprs : Array[@parser.Expr],
   toks : ArrayView[Token],
 ) -> ApplyExpr? {
-  // 所有的转换方法都不需要参数
+  // Check if this is a primitive type first; if not, return None
+  // to let the caller handle struct methods
+  let is_primitive = match base_expr.ty {
+    TypeKind::Int | TypeKind::Int64 | TypeKind::Float | TypeKind::Double | TypeKind::Char => true
+    _ => false
+  }
+  
+  if !is_primitive {
+    return None
+  }
+  
+  // For primitive types, all conversion methods expect 0 arguments
   if arg_exprs.length() != 0 {
     let msg = "Conversion method \{method_name}() expects 0 arguments, got \{arg_exprs.length()}"
     ctx.throw_(toks[0], msg, Error)
+    return None
   }
   
   let base_as_expr = Expr::{ 
