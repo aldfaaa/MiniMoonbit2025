@@ -6,18 +6,28 @@ pub(all) struct Param {
 
 ///|
 pub(all) struct TopFunction {
+  typeTag: String
   fname : String
   param_list : Array[Param]
   ret_ty : TypeKind
   body : BlockExpr
 } derive(Show)
 
+pub fn TopFunction::whole_name(self : TopFunction) -> String {
+  if self.typeTag == "" {
+    self.fname
+  } else {
+    "\{self.typeTag}::\{self.fname}"
+  }
+}
+
 ///|
 pub fn Context::check_top_function(
   self : Context,
   func : @parser.TopFunction,
 ) -> TopFunction raise TypeCheckError {
-  guard self.func_types.get(func.fname) is Some(Function(param_types, ret_ty)) else {
+  let func_whole_name = func.whole_name()
+  guard self.func_types.get(func_whole_name) is Some(Function(param_types, ret_ty)) else {
     raise TypeCheckError("Function not found in environment: \{func.fname}")
   }
   self.enter_scope()
@@ -37,5 +47,5 @@ pub fn Context::check_top_function(
   }
   self.exit_scope()
   self.current_func_ret_ty = None
-  TopFunction::{ fname: func.fname, param_list, ret_ty, body: checked_block }
+  TopFunction::{ typeTag: func.typeTag, fname: func.fname, param_list, ret_ty, body: checked_block }
 }

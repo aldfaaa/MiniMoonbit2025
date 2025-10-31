@@ -192,8 +192,9 @@ pub fn Context::collect_function_types(
     }
   }
   for func in program.top_functions.values() {
-    if self.func_types.contains(func.fname) {
-      raise TypeCheckError("Duplicate function name: \{func.fname}")
+    let func_whole_name = func.whole_name()
+    if self.func_types.contains(func_whole_name) {
+      raise TypeCheckError("Duplicate function name: \{func.typeTag}::\{func.fname}")
     } else {
       let param_types = Array::new()
       for param in func.param_list {
@@ -203,8 +204,8 @@ pub fn Context::collect_function_types(
       }
       let ret_ty = self.check_parser_type(func.ret_ty)
       let fty = Function(param_types, ret_ty.kind)
-      self.func_types.set(func.fname, fty)
-      self.type_env.set(func.fname, Type::{ kind: fty, mutable: false })
+      self.func_types.set(func_whole_name, fty)
+      self.type_env.set(func_whole_name, Type::{ kind: fty, mutable: false })
     }
   }
 }

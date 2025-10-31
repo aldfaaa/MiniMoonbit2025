@@ -6,11 +6,20 @@ pub(all) struct Param {
 
 ///|
 pub(all) struct TopFunction {
+  typeTag: String
   fname : String
   param_list : Array[Param]
   ret_ty : Type
   body : BlockExpr
 } derive(Show, Eq)
+
+pub fn TopFunction::whole_name(self : TopFunction) -> String {
+  if self.typeTag == "" {
+    self.fname
+  } else {
+    self.typeTag + "$$" + self.fname
+  }
+}
 
 ///|
 pub fn parse_param(
@@ -63,6 +72,14 @@ pub fn parse_top_function(
     println("Compiler ICE: Misuse parse_top_function")
     panic()
   }
+  let (typeTag, tokens) = if tokens is [{ kind: Upper(t), .. }, .. tokens] {
+    guard tokens is [{ kind: Symbol("::"), .. }, .. tokens] else {
+      raise ParseError("Expect '::'")
+    }
+    (t, tokens)
+  } else {
+    ("", tokens)
+  }
   guard tokens is [{ kind: Lower(fname), .. }, .. tokens] else {
     raise ParseError("Expect a lower ident")
   }
@@ -84,6 +101,6 @@ pub fn parse_top_function(
     (Array::new(), ret_type, tokens)
   }
   let (body, tokens) = parse_block_expr(tokens)
-  let top_function = TopFunction::{ fname, param_list, ret_ty, body }
+  let top_function = TopFunction::{ typeTag,  fname, param_list, ret_ty, body }
   (top_function, tokens)
 }

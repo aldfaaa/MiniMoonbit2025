@@ -434,6 +434,7 @@ pub fn Context::substitute_top_function_type_var(
   let new_ret_ty_kind = self.ensure_type(top_function.ret_ty)
   let new_body = self.substitute_block_expr_type_var(top_function.body)
   TopFunction::{
+    typeTag: top_function.typeTag,
     fname: top_function.fname,
     param_list: new_param_list,
     ret_ty: new_ret_ty_kind,
