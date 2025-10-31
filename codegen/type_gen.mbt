@@ -35,7 +35,7 @@ pub fn Context::type_codegen_concrete(
     Array(_) => self.llvm_ctx.getPtrTy()
     String(_) => self.llvm_ctx.getPtrTy()
     Tuple(elem_types) => {
-      let llvm_elem_types = elem_types.map(elem_type => self.type_codegen_concrete(
+      let llvm_elem_types = elem_types.map(elem_type => self.type_codegen_opaque(
         elem_type,
       ))
       self.llvm_ctx.getStructType(llvm_elem_types)

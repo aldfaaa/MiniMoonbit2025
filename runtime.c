@@ -329,11 +329,6 @@ int int_of_float(double value) {
     fflush(stderr);
     return -2147483648;
   }
-  // 每1000次调用报告一次
-  if (call_count % 10000 == 0) {
-    fprintf(stderr, "[Debug] int_of_float call count: %d\n", call_count);
-    fflush(stderr);
-  }
   return (int)value;
 }
 
