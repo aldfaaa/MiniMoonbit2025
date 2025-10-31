@@ -28,15 +28,16 @@ fn main {
     return
   }
   let fidx = args.search_by(arg => arg is "-f" || arg is "--file")
-  let code = match fidx {
+  let (source_file, code) = match fidx {
     Some(idx) if idx + 1 < args.length() => {
       let filename = args[idx + 1]
-      @fs.read_file_to_string(filename) catch {
+      let code = @fs.read_file_to_string(filename) catch {
         _ => {
           println("Error reading file '\{filename}'")
           return
         }
       }
+      (filename, code)
     }
     Some(_) => {
       println("Error: No file specified after -f/--file option.")
@@ -50,7 +51,7 @@ fn main {
       return
     }
   }
-  let tokens = @lexer.tokenize(code) catch {
+  let tokens = @lexer.tokenize(code, source_file~) catch {
     err => {
       println("Lexing Error: \{err}")
       return

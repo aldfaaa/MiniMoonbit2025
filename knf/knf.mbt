@@ -1,5 +1,6 @@
 ///|
 pub(all) struct KnfProgram {
+  source_file: String
   struct_defs : Map[String, KnfStructDef]
   global_stmts : Array[KnfStmt]
   top_lets : Map[String, KnfTopLet]
@@ -9,6 +10,7 @@ pub(all) struct KnfProgram {
 
 ///|
 pub impl Show for KnfProgram with output(self, logger) {
+  logger.write_string("KnfProgram: \{self.source_file}\n")
   for _, struct_def in self.struct_defs {
     logger.write_object(struct_def)
     logger.write_char('\n')
@@ -32,6 +34,7 @@ pub fn Context::program_to_knf(
   self : Context,
   prog : @typecheck.Program,
 ) -> KnfProgram raise KnfTransformError {
+  let source_file = prog.source_file
   let struct_defs = Map::new()
   let top_lets = Map::new()
   let functions = Map::new()
@@ -72,7 +75,7 @@ pub fn Context::program_to_knf(
     functions.set(func.fname, knf_func)
   }
   let global_stmts = self.global_stmts
-  KnfProgram::{ struct_defs, externs, top_lets, global_stmts, functions }
+  KnfProgram::{ source_file, struct_defs, externs, top_lets, global_stmts, functions }
 }
 
 ///|

@@ -130,6 +130,7 @@ pub fn Context::add_type_var(self : Context) -> TypeKind {
 
 ///|
 pub(all) struct Program {
+  source_file: String
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
   extern_funcions : Map[String, ExternFunction]
@@ -143,6 +144,7 @@ pub fn Context::check_program(
 ) -> Program raise TypeCheckError {
   self.collect_struct_names(program)
   self.collect_function_types(program)
+  let source_file = program.source_file
   let struct_defs = Map::new()
   let top_lets = Map::new()
   let top_functions = Map::new()
@@ -163,7 +165,7 @@ pub fn Context::check_program(
     let checked_top_func = self.check_top_function(top_func)
     top_functions.set(name, checked_top_func)
   }
-  Program::{ top_lets, top_functions, extern_funcions, struct_defs }
+  Program::{ source_file, top_lets, top_functions, extern_funcions, struct_defs }
 }
 
 ///|

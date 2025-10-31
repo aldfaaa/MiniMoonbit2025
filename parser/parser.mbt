@@ -1,5 +1,6 @@
 ///|
 pub(all) struct Program {
+  source_file: String
   top_lets : Map[String, TopLet]
   top_functions : Map[String, TopFunction]
   extern_funcions : Map[String, ExternFunction]
@@ -8,6 +9,10 @@ pub(all) struct Program {
 
 ///|
 pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
+  guard tokens is [tok, ..] else {
+    raise ParseError("Empty token array passed to parser")
+  }
+  let source_file = tok.file
   let top_lets = Map::new()
   let top_functions = Map::new()
   let extern_funcions = Map::new()
@@ -42,6 +47,6 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
     }
     tokens => raise ParseError("Unexpected token in top level: \{tokens[0]}")
   }
-  let prog = Program::{ top_lets, top_functions, extern_funcions, struct_defs }
+  let prog = Program::{ top_lets, top_functions, extern_funcions, struct_defs, source_file }
   prog
 }

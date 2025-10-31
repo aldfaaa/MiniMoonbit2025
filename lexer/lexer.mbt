@@ -111,7 +111,7 @@ pub(all) enum TokenKind {
 } derive(Show, Eq)
 
 ///|
-pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise TokenizeError {
+pub fn tokenize(code : String, source_file~: String="demo") -> Array[Token] raise TokenizeError {
   let source_code = code;
   let tokens = Array::new()
   let mut line = 1
@@ -119,7 +119,7 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
   let mut idx = 0
   loop code[:] {
     [] => {
-      let tok = Token::new(EOF, line, col, idx, source_code, file_name)
+      let tok = Token::new(EOF, line, col, idx, source_code, source_file)
       tokens.push(tok)
       break
     }
@@ -146,259 +146,259 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
           [] as rest_str => break rest_str
         }
     [.. "::", .. rest] => {
-      let tok = Token::new(Symbol("::"), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol("::"), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "->", .. rest] => {
-      let tok = Token::new(Symbol("->"), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol("->"), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "=>", .. rest] => {
-      let tok = Token::new(Symbol("=>"), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol("=>"), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "!=", .. rest] => {
-      let tok = Token::new(BinaryOp(NE), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(NE), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "==", .. rest] => {
-      let tok = Token::new(BinaryOp(Eq), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Eq), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "<=", .. rest] => {
-      let tok = Token::new(BinaryOp(LE), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(LE), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. ">=", .. rest] => {
-      let tok = Token::new(BinaryOp(GE), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(GE), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "&&", .. rest] => {
-      let tok = Token::new(BinaryOp(And), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(And), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "||", .. rest] => {
-      let tok = Token::new(BinaryOp(Or), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Or), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "<<", .. rest] => {
-      let tok = Token::new(BinaryOp(ShiftLeft), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(ShiftLeft), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. ">>", .. rest] => {
-      let tok = Token::new(BinaryOp(ShiftRight), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(ShiftRight), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "+=", .. rest] => {
-      let tok = Token::new(AssignOp(PlusAssign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(PlusAssign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "-=", .. rest] => {
-      let tok = Token::new(AssignOp(MinusAssign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(MinusAssign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "*=", .. rest] => {
-      let tok = Token::new(AssignOp(MultAssign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(MultAssign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "/=", .. rest] => {
-      let tok = Token::new(AssignOp(DivAssign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(DivAssign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     [.. "%=", .. rest] => {
-      let tok = Token::new(AssignOp(ModAssign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(ModAssign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 2
       idx += 2
       continue rest
     }
     ['+', .. rest] => {
-      let tok = Token::new(BinaryOp(Add), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Add), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['-', .. rest] => {
-      let tok = Token::new(BinaryOp(Sub), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Sub), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['*', .. rest] => {
-      let tok = Token::new(BinaryOp(Mul), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Mul), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['/', .. rest] => {
-      let tok = Token::new(BinaryOp(Div), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Div), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['%', .. rest] => {
-      let tok = Token::new(BinaryOp(Mod), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(Mod), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['&', .. rest] => {
-      let tok = Token::new(BinaryOp(BitAnd), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(BitAnd), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['|', .. rest] => {
-      let tok = Token::new(BinaryOp(BitOr), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(BitOr), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['<', .. rest] => {
-      let tok = Token::new(BinaryOp(LT), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(LT), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['>', .. rest] => {
-      let tok = Token::new(BinaryOp(GT), line, col, idx, source_code, file_name)
+      let tok = Token::new(BinaryOp(GT), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['=', .. rest] => {
-      let tok = Token::new(AssignOp(Assign), line, col, idx, source_code, file_name)
+      let tok = Token::new(AssignOp(Assign), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['!', .. rest] => {
-      let tok = Token::new(Not, line, col, idx, source_code, file_name)
+      let tok = Token::new(Not, line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['(', .. rest] => {
-      let tok = Token::new(Bracket('('), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket('('), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     [')', .. rest] => {
-      let tok = Token::new(Bracket(')'), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket(')'), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['[', .. rest] => {
-      let tok = Token::new(Bracket('['), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket('['), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     [']', .. rest] => {
-      let tok = Token::new(Bracket(']'), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket(']'), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['{', .. rest] => {
-      let tok = Token::new(Bracket('{'), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket('{'), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['}', .. rest] => {
-      let tok = Token::new(Bracket('}'), line, col, idx, source_code, file_name)
+      let tok = Token::new(Bracket('}'), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     ['.', .. rest] => {
-      let tok = Token::new(Symbol("."), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol("."), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     [',', .. rest] => {
-      let tok = Token::new(Symbol(","), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol(","), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     [':', .. rest] => {
-      let tok = Token::new(Symbol(":"), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol(":"), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
       continue rest
     }
     [';', .. rest] => {
-      let tok = Token::new(Symbol(";"), line, col, idx, source_code, file_name)
+      let tok = Token::new(Symbol(";"), line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += 1
       idx += 1
@@ -406,7 +406,7 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
     }
     ['\"', ..] as code => {
       let (tok_kind, len, rest) = tokenize_string(code)
-      let tok = Token::new(tok_kind, line, col, idx, source_code, file_name)
+      let tok = Token::new(tok_kind, line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += len
       idx += len
@@ -414,7 +414,7 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
     }
     ['\'', ..] as code => {
       let (tok_kind, len, rest) = tokenize_char(code)
-      let tok = Token::new(tok_kind, line, col, idx, source_code, file_name)
+      let tok = Token::new(tok_kind, line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += len
       idx += len
@@ -432,7 +432,7 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
         rest => break rest
       }
       let ident = sb.to_string()
-      let tok = Token::new(Upper(ident), line, col, idx, source_code, file_name)
+      let tok = Token::new(Upper(ident), line, col, idx, source_code, source_file)
       tokens.push(tok)
       continue rest
     }
@@ -440,13 +440,13 @@ pub fn tokenize(code : String, file_name~: String="demo") -> Array[Token] raise 
       let (ident, len, rest) = tokenize_lower_ident(code)
       col += len
       idx += len
-      let tok = Token::new(ident, line, col, idx, source_code, file_name)
+      let tok = Token::new(ident, line, col, idx, source_code, source_file)
       tokens.push(tok)
       continue rest
     }
     ['0'..='9', ..] as code => {
       let (tok_kind, len, rest) = tokenize_number(code)
-      let tok = Token::new(tok_kind, line, col, idx, source_code, file_name)
+      let tok = Token::new(tok_kind, line, col, idx, source_code, source_file)
       tokens.push(tok)
       col += len
       idx += len
