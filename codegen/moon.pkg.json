@@ -1,9 +1,9 @@
 {
   "import": [
-    "Kaida-Amethyst/MiniMoonbit/knf",
-    "Kaida-Amethyst/MiniMoonbit/lexer",
-    "Kaida-Amethyst/MiniMoonbit/parser",
-    "Kaida-Amethyst/MiniMoonbit/typecheck",
+    "Kaida-Amethyst/MiniMoonBit/knf",
+    "Kaida-Amethyst/MiniMoonBit/lexer",
+    "Kaida-Amethyst/MiniMoonBit/parser",
+    "Kaida-Amethyst/MiniMoonBit/typecheck",
     {
       "path" : "Kaida-Amethyst/MoonLLVM/IR",
       "alias" : "llvm"

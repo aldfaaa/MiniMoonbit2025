@@ -1,11 +1,11 @@
 {
   "import": [
-    "Kaida-Amethyst/MiniMoonbit/typecheck",
+    "Kaida-Amethyst/MiniMoonBit/typecheck",
     "Kaida-Amethyst/either"
   ],
   "test-import" : [
-    "Kaida-Amethyst/MiniMoonbit/lexer",
-    "Kaida-Amethyst/MiniMoonbit/parser",
+    "Kaida-Amethyst/MiniMoonBit/lexer",
+    "Kaida-Amethyst/MiniMoonBit/parser",
   ]
 }
 

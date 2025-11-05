@@ -1,6 +1,6 @@
 {
   "import": [
-    "Kaida-Amethyst/MiniMoonbit/lexer",
+    "Kaida-Amethyst/MiniMoonBit/lexer",
     "Kaida-Amethyst/either"
   ]
 }
