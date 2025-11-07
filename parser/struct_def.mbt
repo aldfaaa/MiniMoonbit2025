@@ -1,11 +1,11 @@
 ///|
-pub(all) struct StructDef {
+pub struct StructDef {
   name : String
   fields : Array[StructField]
 } derive(Show, Eq)
 
 ///|
-pub(all) struct StructField {
+pub struct StructField {
   name : String
   is_mut : Bool
   ty : Type

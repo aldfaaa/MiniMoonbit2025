@@ -5,6 +5,7 @@ pub(all) struct Program {
   top_functions : Map[String, TopFunction]
   extern_funcions : Map[String, ExternFunction]
   struct_defs : Map[String, StructDef]
+  enum_defs: Map[String, EnumDef]
 } derive(Show)
 
 ///|
@@ -17,6 +18,7 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
   let top_functions = Map::new()
   let extern_funcions = Map::new()
   let struct_defs = Map::new()
+  let enum_defs = Map::new()
   loop tokens[:] {
     [{ kind: Keyword(Extern), .. }, ..] as tokens => {
       let (extern_fn, rest) = parse_extern_function(tokens)
@@ -40,6 +42,11 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
       struct_defs.set(struct_def.name, struct_def)
       continue rest
     }
+    [{ kind: Keyword(Enum), .. }, ..] as tokens => {
+      let (enum_def, rest) = parse_enum_def(tokens)
+      enum_defs.set(enum_def.name, enum_def)
+      continue rest
+    }
     [{ kind: EOF, .. }, ..] => break
     [] => {
       println("Compiler ICE: Empty Token ArrayView")
@@ -47,6 +54,6 @@ pub fn parse(tokens : Array[Token]) -> Program raise ParseError {
     }
     tokens => raise ParseError("Unexpected token in top level: \{tokens[0]}")
   }
-  let prog = Program::{ top_lets, top_functions, extern_funcions, struct_defs, source_file }
+  let prog = Program::{ top_lets, top_functions, extern_funcions, struct_defs, enum_defs, source_file }
   prog
 }

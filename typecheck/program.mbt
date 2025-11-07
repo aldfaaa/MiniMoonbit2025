@@ -34,6 +34,7 @@ pub(all) struct Context {
   mut type_env : Env
   type_vars : Map[Int, TypeKind]
   struct_defs : Map[String, StructDef]
+  enum_defs : Map[String, EnumDef]
   func_types : Map[String, TypeKind]
   mut current_func_ret_ty : TypeKind?
   priv mut error_happened : Bool
@@ -45,6 +46,7 @@ pub fn Context::new() -> Context {
     type_env: Env::new(),
     type_vars: Map::new(),
     struct_defs: Map::new(),
+    enum_defs: Map::new(),
     func_types: Map::new(),
     current_func_ret_ty: None,
     error_happened: false,
@@ -135,6 +137,7 @@ pub(all) struct Program {
   top_functions : Map[String, TopFunction]
   extern_funcions : Map[String, ExternFunction]
   struct_defs : Map[String, StructDef]
+  enum_defs : Map[String, EnumDef]
 } derive(Show)
 
 ///|
@@ -142,13 +145,14 @@ pub fn Context::check_program(
   self : Context,
   program : @parser.Program,
 ) -> Program raise TypeCheckError {
-  self.collect_struct_names(program)
+  self.collect_struct_or_enum_names(program)
   self.collect_function_types(program)
   let source_file = program.source_file
   let struct_defs = Map::new()
   let top_lets = Map::new()
   let top_functions = Map::new()
   let extern_funcions = Map::new()
+  let enum_defs = Map::new()
   for name, ext_func in program.extern_funcions {
     let checked_ext_func = self.check_extern_function(ext_func)
     extern_funcions.set(name, checked_ext_func)
@@ -156,6 +160,10 @@ pub fn Context::check_program(
   for name, struct_def in program.struct_defs {
     let check_struct_def = self.check_struct_def(struct_def)
     struct_defs.set(name, check_struct_def)
+  }
+  for name, enum_def in program.enum_defs {
+    let checked_enum_def = self.check_enum_def(enum_def)
+    enum_defs.set(name, checked_enum_def)
   }
   for name, top_let in program.top_lets {
     let checked_top_let = self.check_top_let(top_let)
@@ -165,16 +173,16 @@ pub fn Context::check_program(
     let checked_top_func = self.check_top_function(top_func)
     top_functions.set(name, checked_top_func)
   }
-  Program::{ source_file, top_lets, top_functions, extern_funcions, struct_defs }
+  Program::{ source_file, top_lets, top_functions, extern_funcions, struct_defs, enum_defs }
 }
 
 ///|
-pub fn Context::collect_struct_names(
+pub fn Context::collect_struct_or_enum_names(
   self : Context,
   program : @parser.Program,
 ) -> Unit raise TypeCheckError {
   for struct_def in program.struct_defs.values() {
-    if self.struct_defs.contains(struct_def.name) {
+    if self.struct_defs.contains(struct_def.name) || self.enum_defs.contains(struct_def.name) {
       raise TypeCheckError("Duplicate struct name: \{struct_def.name}")
     } else {
       let struct_def = StructDef::{
@@ -183,6 +191,17 @@ pub fn Context::collect_struct_names(
         methods: Map::new(),
       }
       self.struct_defs.set(struct_def.name, struct_def)
+    }
+  }
+  for enum_def in program.enum_defs.values() {
+    if self.enum_defs.contains(enum_def.name) || self.struct_defs.contains(enum_def.name) {
+      raise TypeCheckError("Duplicate struct/enum name: \{enum_def.name}")
+    } else {
+      let enum_def = EnumDef::{
+        name: enum_def.name,
+        enum_fields: Array::new(),
+      }
+      self.enum_defs.set(enum_def.name, enum_def)
     }
   }
 }
