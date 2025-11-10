@@ -11,15 +11,16 @@ pub fn parse_struct_construct(
 ) -> (AtomExpr, ArrayView[Token]) raise ParseError {
   let init_tokens = tokens
   guard tokens is [{ kind: Upper(name), .. }, .. tokens] else {
-    println("Compiler ICE: Misuse parse_struct_or_enum_construct")
+    println("Compiler ICE: Misuse parse_struct_or_enum_construct, expected struct/enum name")
     panic()
   }
   guard tokens is [{ kind: Symbol("::"), .. }, .. tokens] else {
-    println("Compiler ICE: Misuse parse_struct_or_enum_construct")
+    println("Compiler ICE: Misuse parse_struct_or_enum_construct, expected '::'")
     panic()
   }
   guard tokens is [{ kind: Bracket('{'), .. }, .. tokens] else {
-    raise ParseError("Expect '{' for struct construct")
+    println("Compiler ICE: Misuse parse_struct_or_enum_construct, expected '{'")
+    panic()
   }
   let fields : Array[(String, Expr)] = Array::new()
   let tokens = loop tokens {

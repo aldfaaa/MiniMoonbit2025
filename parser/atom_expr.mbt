@@ -20,6 +20,7 @@ pub(all) enum AtomExprKind {
   Tuple(Array[Expr]) // (expr, expr, ...)
   Array(Array[Expr]) // [expr, expr, ...]
   ArrayMake(Expr, Expr) // Array::make(size, init)
+  EnumConstruct(String?, String, Array[Expr]) // EnumTag::Variant(expr, ...)
   StructConstruct(StructConstructExpr) // StructName::{ field: expr, ... }
 } derive(Show, Eq)
 
@@ -84,7 +85,9 @@ pub fn parse_atom_expr(
         IdentWithTag(tag, ident), init_tokens, tokens )
       (expr, tokens)
     }
-    [{ kind: Upper(_), .. }, ..] as tokens => parse_struct_construct(tokens)
+    [{ kind: Upper(_), .. }, {kind: Symbol("::"), ..},
+     { kind: Bracket('{'), ..}, ..] as tokens => parse_struct_construct(tokens)
+    [{ kind: Upper(_), ..}, ..] as tokens => parse_enum_construct(tokens)
     [{ kind: Bracket('('), .. }, ..] as tokens => parse_paren_expr(tokens)
     [{ kind: Bracket('['), .. }, ..] as tokens => parse_array_expr(tokens)
     [] => {
@@ -210,5 +213,50 @@ fn parse_array_expr(
     }
   }
   let atom_expr = AtomExpr::new(AtomExprKind::Array(exprs), init_tokens, tokens)
+  (atom_expr, tokens)
+}
+
+fn parse_enum_construct(
+  tokens : ArrayView[Token],
+) -> (AtomExpr, ArrayView[Token]) raise ParseError {
+  let init_tokens = tokens
+  guard tokens is [{ kind: Upper(name1), .. }, ..tokens] else {
+    println("Compiler ICE: Misuse parse_enum_construct, expected enum name")
+    panic()
+  }
+  let (tag, variant_name, tokens) = match tokens {
+    [{ kind: Symbol("::"), .. }, { kind: Upper(variant), .. }, .. tokens] =>
+      (Some(name1), variant, tokens)
+    _ => {
+      (None, name1, tokens)
+    }
+  }
+  let exprs : Array[Expr] = Array::new()
+  guard tokens is [{ kind: Bracket('('), .. }, .. tokens] else {
+    let kind = AtomExprKind::EnumConstruct(tag, variant_name, exprs)
+    let atom_expr = AtomExpr::new(kind, tokens, tokens)
+    return (atom_expr, tokens)
+  }
+  let tokens = loop tokens {
+    [{ kind: Bracket(')'), .. }, .. rest] => break rest
+    [{ kind: Symbol(","), .. }, { kind: Bracket(')'), .. }, .. rest] =>
+      break rest
+    [{ kind: Symbol(","), .. }, .. tokens] => {
+      let (expr, rest) = parse_expr(tokens)
+      exprs.push(expr)
+      continue rest
+    }
+    [] => {
+      println("Compiler ICE: Empty Token ArrayView")
+      panic()
+    }
+    tokens => {
+      let (expr, rest) = parse_expr(tokens)
+      exprs.push(expr)
+      continue rest
+    }
+  }
+  let kind = AtomExprKind::EnumConstruct(tag, variant_name, exprs)
+  let atom_expr = AtomExpr::new(kind, init_tokens, tokens)
   (atom_expr, tokens)
 }

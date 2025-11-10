@@ -14,6 +14,7 @@ pub(all) enum Keyword {
   Return
   Extern
   Enum
+  Match
 } derive(Show, Eq)
 
 ///|
@@ -484,6 +485,7 @@ fn tokenize_lower_ident(code : StringView) -> (TokenKind, Int, StringView) {
     "true" => Bool(true)
     "false" => Bool(false)
     "enum" => Keyword(Enum)
+    "match" => Keyword(Match)
     "_" => Wildcard
     _ => Lower(ident)
   }

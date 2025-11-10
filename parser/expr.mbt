@@ -12,6 +12,7 @@ pub(all) enum ExprKind {
   NegExpr(Expr)
   BinaryExpr(BinaryOp, Expr, Expr)
   IfExpr(IfExpr)
+  MatchExpr(MatchExpr)
 } derive(Show, Eq)
 
 fn Expr::unit() -> Expr {
@@ -101,6 +102,11 @@ pub fn parse_expr(
     Keyword(If) => {
       let (if_expr, rest) = parse_if_expr(tokens)
       let expr = Expr::new(ExprKind::IfExpr(if_expr), init_tokens, rest)
+      return (expr, rest)
+    }
+    Keyword(Match) => {
+      let (match_expr, rest) = parse_match_expr(tokens)
+      let expr = Expr::new(ExprKind::MatchExpr(match_expr), init_tokens, rest)
       return (expr, rest)
     }
     Bracket('{') => {

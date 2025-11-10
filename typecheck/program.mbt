@@ -195,7 +195,7 @@ pub fn Context::collect_struct_or_enum_names(
   }
   for enum_def in program.enum_defs.values() {
     if self.enum_defs.contains(enum_def.name) || self.struct_defs.contains(enum_def.name) {
-      raise TypeCheckError("Duplicate struct/enum name: \{enum_def.name}")
+      raise TypeCheckError("Duplicate enum name: \{enum_def.name}")
     } else {
       let enum_def = EnumDef::{
         name: enum_def.name,
@@ -247,4 +247,17 @@ pub fn Context::collect_function_types(
       self.type_env.set(func_whole_name, Type::{ kind: fty, mutable: false })
     }
   }
+}
+
+pub fn Context::find_enum_def_by_variant_name(
+  self: Self,
+  variant_name: String
+) -> Array[EnumDef] {
+  let enum_defs = Array::new()
+  for _, enum_def in self.enum_defs {
+    if enum_def.get_field(variant_name) is Some(_) {
+      enum_defs.push(enum_def)
+    }
+  }
+  enum_defs
 }

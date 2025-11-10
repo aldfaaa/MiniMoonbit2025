@@ -18,6 +18,7 @@ pub(all) enum TypeKind {
   Array(TypeKind)
   Function(Array[TypeKind], TypeKind)
   Struct(String)
+  Enum(String)
   Any
   TypeVar(Int)
 } derive(Hash)
@@ -55,11 +56,10 @@ pub fn Context::check_parser_typekind(
       let ret_ty = from_parser_typekind(ret)
       Function(param_tys, ret_ty)
     }
+    Defined(name) if self.struct_defs.contains(name) => Struct(name)
+    Defined(name) if self.enum_defs.contains(name) => Enum(name)
     Defined(name) => {
-      guard self.struct_defs.contains(name) else {
-        raise TypeCheckError("Undefined struct type: \{name}")
-      }
-      Struct(name)
+      raise TypeCheckError("Unknown type: \{name}")
     }
   }
 }
@@ -236,6 +236,7 @@ pub impl Show for TypeKind with output(self, logger) {
       "(\{params}) -> \{return_type.to_string()}"
     }
     Struct(name) => "\{name}"
+    Enum(name) => "\{name}"
     Any => "Any"
     TypeVar(name) => "TypeVar(\{name})"
   }

@@ -21,6 +21,7 @@ pub(all) enum AtomExprKind {
   Array(Array[Expr]) // [expr, expr, ...]
   ArrayMake(Expr, Expr) // Array::make(size, init)
   StructConstruct(StructConstructExpr) // StructName::{ field: expr, ... }
+  EnumConstruct(String, String, Array[Expr]) // [Tag::]Variant(expr, ...)
   Cast(TypeKind, Expr) // Type cast: e.g., n.to_int()
   BitCast(TypeKind, Expr) // Bitcast: e.g., n.reinterpret_as_float()
 } derive(Show)
@@ -77,6 +78,12 @@ pub fn Context::check_atom_expr(
     ArrayMake(size_expr, init_expr) =>
       self.check_array_make_expr(size_expr, init_expr)
     Tuple(exprs) => self.check_tuple_expr(exprs)
+    EnumConstruct(tag, variant_name, exprs) => self.check_enum_constuct_expr(
+      tag,
+      variant_name,
+      exprs,
+      atom_expr,
+    )
     StructConstruct(sc_expr) => self.check_struct_construct_expr(sc_expr)
   }
   AtomExpr::{ kind: typed_atom_expr_kind, ty: type_kind, toks: atom_expr.toks }

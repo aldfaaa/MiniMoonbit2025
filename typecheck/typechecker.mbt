@@ -67,6 +67,10 @@ pub fn Context::substitute_expr_type_var(
       let new_block_expr = self.substitute_block_expr_type_var(block_expr)
       ExprKind::BlockExpr(new_block_expr)
     }
+    MatchExpr(match_expr) => {
+      let new_match_expr = self.substitute_match_expr_type_var(match_expr)
+      MatchExpr(new_match_expr)
+    }
   }
   Expr::{ kind: new_expr_kind, ty: new_ty_kind, toks: expr.toks }
 }
@@ -207,6 +211,9 @@ pub fn Context::substitute_atom_expr_type_var(
       let new_target_ty = self.ensure_type(target_ty)
       let new_expr = self.substitute_expr_type_var(expr)
       AtomExprKind::BitCast(new_target_ty, new_expr)
+    }
+    AtomExprKind::EnumConstruct(_) => {
+      raise TypeCheckError("EnumConstruct is not supported yet in type variable substitution.")
     }
   }
   AtomExpr::{ kind: new_atom_expr_kind, ty: new_ty_kind, toks: atom_expr.toks }
@@ -366,6 +373,33 @@ pub fn Context::substitute_if_expr_type_var(
     cond: new_condition,
     then_block: new_then_branch,
     else_block: new_else_branch,
+    ty: new_ty_kind,
+  }
+}
+
+pub fn Context::substitute_match_expr_type_var(
+  self : Context,
+  match_expr : MatchExpr,
+) -> MatchExpr raise TypeCheckError {
+  let new_ty_kind = self.ensure_type(match_expr.ty)
+  let new_cond_expr = self.substitute_expr_type_var(match_expr.cond)
+  let new_arms = Array::new()
+  for arm in match_expr.arms {
+    let { pattern, match_guard, body } = arm
+    let match_body = match match_guard {
+      Some(guard_expr) => {
+        let new_guard_expr = self.substitute_expr_type_var(guard_expr)
+        Some(new_guard_expr)
+      }
+      None => None
+    }
+    let body = self.substitute_expr_type_var(body)
+    let new_arm = MatchArm::{ pattern: pattern, match_guard: match_body, body: body }
+    new_arms.push(new_arm)
+  }
+  MatchExpr::{
+    cond: new_cond_expr,
+    arms: new_arms,
     ty: new_ty_kind,
   }
 }

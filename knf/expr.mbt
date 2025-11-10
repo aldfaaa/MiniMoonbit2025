@@ -162,6 +162,7 @@ pub fn Context::expr_to_knf(
       ([], KnfExpr::Block(block))
     }
     IfExpr(if_expr) => self.if_expr_to_knf(if_expr)
+    MatchExpr(match_expr) => self.match_expr_to_knf(match_expr)
     NotExpr(inner_expr) => {
       let (stmts, inner_knf_expr) = self.expr_to_knf(inner_expr)
       let ty = self.typekind_to_knf(inner_expr.ty)

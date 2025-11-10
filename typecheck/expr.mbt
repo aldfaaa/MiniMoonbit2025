@@ -13,6 +13,7 @@ pub(all) enum ExprKind {
   NegExpr(Expr)
   BinaryExpr(BinaryOp, Expr, Expr)
   IfExpr(IfExpr)
+  MatchExpr(MatchExpr)
 } derive(Show)
 
 ///|
@@ -245,6 +246,10 @@ pub fn Context::check_expr(
     IfExpr(if_expr) => {
       let checked_if_expr = self.check_if_expr(if_expr)
       Expr::{ kind: IfExpr(checked_if_expr), ty: checked_if_expr.ty, toks: expr.toks }
+    }
+    MatchExpr(match_expr) => {
+      let checked_match_expr = self.check_match_expr(match_expr)
+      Expr::{ kind: MatchExpr(checked_match_expr), ty: checked_match_expr.ty, toks: expr.toks }
     }
   }
 }
