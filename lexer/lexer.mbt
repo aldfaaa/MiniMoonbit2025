@@ -528,6 +528,37 @@ fn tokenize_number(
     }
     _ => rest
   }
+  
+  // Check for exponent (e or E)
+  let rest = match rest {
+    ['e' | 'E' as e, ..] as exp_rest => {
+      is_float = true
+      sb.write_char(e)
+      let rest_after_e = match exp_rest {
+        ['e' | 'E', .. rest] => rest
+        _ => panic()
+      }
+      // Check for optional sign
+      let rest_after_sign = match rest_after_e {
+        ['+' | '-' as sign, .. rest] => {
+          sb.write_char(sign)
+          rest
+        }
+        _ => rest_after_e
+      }
+      // Parse exponent digits
+      let rest_after_exp = loop rest_after_sign {
+        ['0'..='9' as c, .. rest] => {
+          sb.write_char(c)
+          continue rest
+        }
+        rest => break rest
+      }
+      rest_after_exp
+    }
+    _ => rest
+  }
+  
   let num_str = sb.to_string()
   // Check for type suffix (L for Int64, F for Float)
   let (kind, len, rest) = if is_float {

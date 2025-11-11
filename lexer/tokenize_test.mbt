@@ -140,6 +140,19 @@ test "Tokenize Float Number" {
   assert_true(tokens[4].kind is Double(0.57721))
   assert_true(tokens[5].kind is Double(42.0))
   assert_true(tokens[6].kind is EOF)
+  
+  // Test scientific notation
+  let code2 =
+    #|1.0e+01 2.5e-3 3.0e10 1.23e5 5.67E+2 9.81e0
+  let tokens2 = tokenize(code2)
+  assert_true(tokens2.length() is 7)
+  assert_true(tokens2[0].kind is Double(1.0e+01))
+  assert_true(tokens2[1].kind is Double(2.5e-3))
+  assert_true(tokens2[2].kind is Double(3.0e10))
+  assert_true(tokens2[3].kind is Double(1.23e5))
+  assert_true(tokens2[4].kind is Double(5.67E+2))
+  assert_true(tokens2[5].kind is Double(9.81e0))
+  assert_true(tokens2[6].kind is EOF)
 }
 
 ///|
