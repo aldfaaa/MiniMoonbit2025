@@ -3,7 +3,105 @@ pub(all) struct ApplyExpr {
   kind : ApplyExprKind
   ty : TypeKind
   toks : ArrayView[Token]
-} derive(Show)
+}
+
+///|
+pub impl Show for ApplyExpr with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn ApplyExpr::to_string(self : Self, color? : Bool = true) -> String {
+  match self.kind {
+    // For AtomExpr case, directly return atom_expr's to_string without adding extra type
+    AtomExpr(atom_expr) => atom_expr.to_string(color~)
+    ArrayAccess(apply_expr, index_expr) => {
+      let prefix = "array access"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let apply_str = apply_expr.to_string(color~)
+      let apply_lines = apply_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let apply_formatted = @parser.format_lines(
+        apply_lines,
+        head_with="├-",
+        continue_with="│ ",
+      )
+      let index_str = index_expr.to_string(color~)
+      let index_lines = index_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let index_formatted = @parser.format_lines(
+        index_lines,
+        head_with="└-",
+        continue_with="  ",
+      )
+      "\{prefix_with_type}\n\{apply_formatted}\n\{index_formatted}"
+    }
+    FieldAccess(apply_expr, field) => {
+      let prefix = "field access"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} .\{field} (\{ty_str})"
+      let inner_str = apply_expr.to_string(color~)
+      let lines = inner_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix_with_type}\n\{formatted}"
+    }
+    Call(apply_expr, args) => {
+      let prefix = "function call"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let apply_str = apply_expr.to_string(color~)
+      let apply_lines = apply_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let apply_formatted = if args.length() > 0 {
+        @parser.format_lines(
+          apply_lines,
+          head_with="├-",
+          continue_with="│ ",
+        )
+      } else {
+        @parser.format_lines(apply_lines, head_with="└-", continue_with="  ")
+      }
+      let mut result = "\{prefix_with_type}\n\{apply_formatted}"
+      for i = 0; i < args.length(); i = i + 1 {
+        let arg = args[i]
+        let arg_str = arg.to_string(color~)
+        let arg_lines = arg_str
+          .split("\n")
+          .map(fn(sv) { sv.to_string() })
+          .to_array()
+        let is_last = i == args.length() - 1
+        let arg_formatted = if is_last {
+          @parser.format_lines(arg_lines, head_with="└-", continue_with="  ")
+        } else {
+          @parser.format_lines(
+            arg_lines,
+            head_with="├-",
+            continue_with="│ ",
+          )
+        }
+        result = "\{result}\n\{arg_formatted}"
+      }
+      result
+    }
+  }
+}
 
 ///|
 pub(all) enum ApplyExprKind {
@@ -742,4 +840,77 @@ fn handle_primitive_method_call(
       }
     _ => None
   }
+}
+
+///|
+test "ApplyExpr to_string Test" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Double, mutable: false })
+  ctx.type_env.set("point", { kind: TypeKind::Struct("Point"), mutable: false })
+  ctx.type_env.set("arr", {
+    kind: TypeKind::Array(TypeKind::Int),
+    mutable: false,
+  })
+  ctx.type_env.set("add", {
+    kind: TypeKind::Function([TypeKind::Int, TypeKind::Int], TypeKind::Int),
+    mutable: false,
+  })
+  ctx.struct_defs.set("Point", {
+    name: "Point",
+    fields: [
+      { name: "x", ty: { kind: TypeKind::Int, mutable: false } },
+      { name: "y", ty: { kind: TypeKind::Int, mutable: false } },
+    ],
+    methods: Map::new(),
+  })
+  let code =
+    #|42 ; x ; point.x ; arr[0] ; add(1, 2)
+  let tokens = @lexer.tokenize(code)
+
+  // Test AtomExpr - Int: 42
+  let (parsed, rest) = @parser.parse_apply_expr(tokens[:])
+  let checked = ctx.check_apply_expr(parsed)
+  inspect(checked.to_string(color~), content="int literal 42 (Int)")
+
+  // Test AtomExpr - Ident: x
+  let (parsed, rest) = @parser.parse_apply_expr(rest[1:])
+  let checked = ctx.check_apply_expr(parsed)
+  inspect(checked.to_string(color~), content="variable x (Double)")
+
+  // Test FieldAccess: point.x
+  let (parsed, rest) = @parser.parse_apply_expr(rest[1:])
+  let checked = ctx.check_apply_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|field access .x (Int)
+      #|└-variable point (Point)
+    ),
+  )
+
+  // Test ArrayAccess: arr[0]
+  let (parsed, rest) = @parser.parse_apply_expr(rest[1:])
+  let checked = ctx.check_apply_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|array access (Int)
+      #|├-variable arr (Array[Int])
+      #|└-int literal 0 (Int)
+    ),
+  )
+
+  // Test Call with arguments: add(1, 2)
+  let (parsed, _) = @parser.parse_apply_expr(rest[1:])
+  let checked = ctx.check_apply_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|function call (Int)
+      #|├-variable add ((Int, Int) -> Int)
+      #|├-int literal 1 (Int)
+      #|└-int literal 2 (Int)
+    ),
+  )
 }

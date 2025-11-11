@@ -1,6 +1,7 @@
 
 enum ColorA {
   RGB(Int, Int, Int)
+  RGBA(Int, Int, Int, Int)
 }
 
 fn main {

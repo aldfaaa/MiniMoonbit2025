@@ -2,7 +2,20 @@
 pub(all) struct Param {
   name : String
   ty : TypeKind
-} derive(Show)
+}
+
+///|
+pub impl Show for Param with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn Param::to_string(self : Self, color? : Bool = true) -> String {
+  let ty_str = self.ty.to_string()
+  let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+  "\{self.name}: \{ty_str}"
+}
 
 ///|
 pub(all) struct TopFunction {
@@ -10,7 +23,71 @@ pub(all) struct TopFunction {
   param_list : Array[Param]
   ret_ty : TypeKind
   body : BlockExpr
-} derive(Show)
+}
+
+///|
+pub impl Show for TopFunction with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn TopFunction::to_string(self : Self, color? : Bool = true) -> String {
+  let full_name = "Top function: \{self.fname}"
+  let prefix = if color { @color.taint(full_name, Magenta) } else { full_name }
+  let mut result = prefix
+
+  // Format parameters
+  if self.param_list.length() > 0 {
+    let params_prefix = "params:"
+    let params_prefix = if color {
+      @color.taint(params_prefix, Blue)
+    } else {
+      params_prefix
+    }
+    result = "\{result}\n├-\{params_prefix}"
+    for i = 0; i < self.param_list.length(); i = i + 1 {
+      let param = self.param_list[i]
+      let param_text = param.to_string(color~)
+      let is_last_param = i == self.param_list.length() - 1
+      let param_formatted = if is_last_param {
+        @parser.format_lines([param_text], head_with="└-", continue_with="  ")
+      } else {
+        @parser.format_lines(
+          [param_text],
+          head_with="├-",
+          continue_with="│ ",
+        )
+      }
+      result = "\{result}\n│ \{param_formatted}"
+    }
+  }
+
+  // Format return type
+  let ret_ty_str = self.ret_ty.to_string()
+  let ret_ty_str = if color {
+    @color.taint(ret_ty_str, Green)
+  } else {
+    ret_ty_str
+  }
+  let ret_text = "return: \{ret_ty_str}"
+  let ret_formatted = @parser.format_lines(
+    [ret_text],
+    head_with="├-",
+    continue_with="│ ",
+  )
+  result = "\{result}\n\{ret_formatted}"
+
+  // Format body
+  let body_str = self.body.to_string(color~)
+  let body_lines = body_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let body_formatted = @parser.format_lines(body_lines)
+  result = "\{result}\n\{body_formatted}\n"
+  result
+}
 
 ///|
 pub fn Context::check_top_function(
@@ -55,4 +132,68 @@ pub fn Context::check_top_function(
     ret_ty,
     body: checked_block,
   }
+}
+
+///|
+test "TopFunction to_string Test - Simple" {
+  let color = false
+  let ctx = Context::new()
+  ctx.func_types.set("add", Function([Int, Int], Int))
+  ctx.type_env.set("add", Type::{
+    kind: Function([Int, Int], Int),
+    mutable: false,
+  })
+  let code =
+    #|fn add(x: Int, y: Int) -> Int { return x + y ; }
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check simple top function
+  let (parsed, _) = @parser.parse_top_function(tokens)
+  let checked = ctx.check_top_function(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|Top function: add
+      #|├-params:
+      #|│ ├-x: Int
+      #|│ └-y: Int
+      #|├-return: Int
+      #|└-block (Any)
+      #|  └-return statement
+      #|    └-binary expr: + (Int)
+      #|      ├-variable x (Int)
+      #|      └-variable y (Int)
+      #|  
+      #|
+    ),
+  )
+}
+
+///|
+test "TopFunction to_string Test - Main" {
+  let color = false
+  let ctx = Context::new()
+  ctx.func_types.set("main", Function([], Unit))
+  ctx.type_env.set("main", Type::{ kind: Function([], Unit), mutable: false })
+  let code =
+    #|fn main { let x = 42 ; }
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check main function
+  let (parsed, _) = @parser.parse_top_function(tokens)
+  let checked = ctx.check_top_function(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|Top function: main
+      #|├-return: Unit
+      #|└-block (Unit)
+      #|  └-let statement
+      #|    ├-pattern: ident pattern x
+      #|    ├-type: : Int
+      #|    └-expr: int literal 42 (Int)
+      #|  
+      #|
+    ),
+  )
 }

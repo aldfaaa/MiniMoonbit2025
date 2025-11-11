@@ -1,7 +1,42 @@
 ///|
 pub(all) struct Stmt {
   kind : StmtKind
-} derive(Show)
+}
+
+///|
+pub impl Show for Stmt with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn Stmt::to_string(self : Self, color? : Bool = true) -> String {
+  match self.kind {
+    LetStmt(let_stmt) => let_stmt.to_string(color~)
+    LetMutStmt(let_mut_stmt) => let_mut_stmt.to_string(color~)
+    AssignStmt(assign_stmt) => assign_stmt.to_string(color~)
+    ExprStmt(expr) => expr.to_string(color~)
+    ReturnStmt(expr_opt) => {
+      let prefix = "return statement"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      match expr_opt {
+        Some(expr) => {
+          let expr_str = expr.to_string(color~)
+          let expr_lines = expr_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let expr_formatted = @parser.format_lines(expr_lines)
+          "\{prefix}\n\{expr_formatted}"
+        }
+        None => prefix
+      }
+    }
+    WhileStmt(while_stmt) => while_stmt.to_string(color~)
+    ForStmt(for_stmt) => for_stmt.to_string(color~)
+    LocalFunction(local_fn) => local_fn.to_string(color~)
+  }
+}
 
 ///|
 pub(all) enum StmtKind {
@@ -13,7 +48,23 @@ pub(all) enum StmtKind {
   ExprStmt(Expr)
   ReturnStmt(Expr?)
   LocalFunction(LocalFunction)
-} derive(Show)
+}
+
+///|
+pub impl Show for StmtKind with output(self, logger) {
+  let s = match self {
+    LetStmt(let_stmt) => let_stmt.to_string()
+    LetMutStmt(let_mut_stmt) => let_mut_stmt.to_string()
+    AssignStmt(assign_stmt) => assign_stmt.to_string()
+    ExprStmt(expr) => "expr: \{expr}"
+    ReturnStmt(Some(expr)) => "return \{expr}"
+    ReturnStmt(None) => "return"
+    WhileStmt(_) => "while (...) { ... }"
+    ForStmt(_) => "for (...) { ... }"
+    LocalFunction(_) => "fn (...) { ... }"
+  }
+  logger.write_string(s)
+}
 
 ///|
 pub fn Context::check_stmt(
@@ -74,4 +125,102 @@ pub fn Context::check_stmt(
     }
     NoopStmt => raise TypeCheckError("Error happened in Parser Phase")
   }
+}
+
+///|
+test "Stmt to_string Test - Basic" {
+  let color = false
+  let ctx = Context::new()
+
+  // Test LetStmt: let x = 42
+  let code1 = "let x = 42 ;"
+  let tokens1 = @lexer.tokenize(code1)
+  let (stmt, _) = @parser.parse_stmt(tokens1[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let statement
+      #|├-pattern: ident pattern x
+      #|├-type: : Int
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
+
+  // Test LetMutStmt: let mut y = 10
+  let code2 = "let mut y = 10 ;"
+  let tokens2 = @lexer.tokenize(code2)
+  let (stmt, _) = @parser.parse_stmt(tokens2[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let mut statement
+      #|├-name: y
+      #|├-type: : Int
+      #|└-expr: int literal 10 (Int)
+    ),
+  )
+
+  // Test AssignStmt: x = 20
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: true })
+  let code3 = "x = 20 ;"
+  let tokens3 = @lexer.tokenize(code3)
+  let (stmt, _) = @parser.parse_stmt(tokens3[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|assign statement: =
+      #|├-lvalue: lvalue x (Int)
+      #|└-expr: int literal 20 (Int)
+    ),
+  )
+}
+
+///|
+test "Stmt to_string Test - Expr and Return" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("foo", {
+    kind: TypeKind::Function([TypeKind::Int], TypeKind::Unit),
+    mutable: false,
+  })
+
+  // Test ExprStmt: foo(42)
+  let code1 = "foo(42) ;"
+  let tokens1 = @lexer.tokenize(code1)
+  let (stmt, _) = @parser.parse_stmt(tokens1[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|expr statement
+      #|└-function call (Unit)
+      #|  ├-variable foo ((Int) -> Unit)
+      #|  └-int literal 42 (Int)
+    ),
+  )
+
+  // Test ReturnStmt with no expr: return
+  ctx.current_func_ret_ty = Some(TypeKind::Unit)
+  let code2 = "return ;"
+  let tokens2 = @lexer.tokenize(code2)
+  let (stmt, _) = @parser.parse_stmt(tokens2[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(checked.to_string(color~), content="return statement")
+
+  // Test ReturnStmt with expr: return 100
+  ctx.current_func_ret_ty = Some(TypeKind::Int)
+  let code3 = "return 100 ;"
+  let tokens3 = @lexer.tokenize(code3)
+  let (stmt, _) = @parser.parse_stmt(tokens3[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|return statement
+      #|└-int literal 100 (Int)
+    ),
+  )
 }

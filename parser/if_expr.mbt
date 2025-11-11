@@ -134,7 +134,6 @@ test "IfExpr to_string Test - Simple" {
       #|        └-return statement
       #|          └-int literal 1
       #|        
-
     ),
   )
 }
@@ -163,7 +162,6 @@ test "IfExpr to_string Test - With Else" {
       #|        └-return statement
       #|          └-int literal 0
       #|        
-
     ),
   )
 }
@@ -200,7 +198,6 @@ test "IfExpr to_string Test - Else If" {
       #|                └-return statement
       #|                  └-int literal 0
       #|                
-
     ),
   )
 }
@@ -228,7 +225,6 @@ test "IfExpr to_string Test - Complex Condition" {
       #|          ├-pattern: ident pattern x
       #|          └-expr: int literal 42
       #|        
-
     ),
   )
 }

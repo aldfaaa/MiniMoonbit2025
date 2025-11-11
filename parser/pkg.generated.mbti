@@ -335,6 +335,7 @@ pub(all) struct Program {
   struct_defs : Map[String, StructDef]
   enum_defs : Map[String, EnumDef]
 }
+fn Program::to_string(Self, color? : Bool) -> String
 impl Show for Program
 
 pub(all) struct Stmt {
@@ -365,6 +366,7 @@ pub(all) struct StructConstructExpr {
   fields : Array[(String, Expr)]
   toks : ArrayView[@lexer.Token]
 }
+fn StructConstructExpr::to_string(Self, color? : Bool) -> String
 impl Eq for StructConstructExpr
 impl Show for StructConstructExpr
 

@@ -4,7 +4,123 @@ pub(all) struct ForStmt {
   cond : Expr // if parser cond is None, this is Bool::true
   steps : Array[(String, AssignOp, Expr)]
   body : BlockExpr
-} derive(Show)
+}
+
+///|
+pub impl Show for ForStmt with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn ForStmt::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "for statement"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+  let mut result = prefix
+
+  // Format inits
+  if self.inits.length() > 0 {
+    let inits_prefix = "inits:"
+    let inits_prefix = if color {
+      @color.taint(inits_prefix, Blue)
+    } else {
+      inits_prefix
+    }
+    result = "\{result}\n├-\{inits_prefix}"
+    for i = 0; i < self.inits.length(); i = i + 1 {
+      let (name, expr) = self.inits[i]
+      let expr_str = expr.to_string(color~)
+      let expr_lines = expr_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let is_last_init = i == self.inits.length() - 1
+      let expr_formatted = if is_last_init {
+        @parser.format_lines(
+          expr_lines,
+          head_with="└-\{name} = ",
+          continue_with="  ",
+        )
+      } else {
+        @parser.format_lines(
+          expr_lines,
+          head_with="├-\{name} = ",
+          continue_with="│ ",
+        )
+      }
+      result = "\{result}\n│ \{expr_formatted}"
+    }
+  }
+
+  // Format condition
+  let cond_str = self.cond.to_string(color~)
+  let cond_lines = cond_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let cond_formatted = @parser.format_lines(
+    cond_lines,
+    head_with="├-cond: ",
+    continue_with="│       ",
+  )
+  result = "\{result}\n\{cond_formatted}"
+
+  // Format steps
+  if self.steps.length() > 0 {
+    let steps_prefix = "steps:"
+    let steps_prefix = if color {
+      @color.taint(steps_prefix, Blue)
+    } else {
+      steps_prefix
+    }
+    result = "\{result}\n├-\{steps_prefix}"
+    for i = 0; i < self.steps.length(); i = i + 1 {
+      let (name, op, expr) = self.steps[i]
+      let op_str = match op {
+        Assign => "="
+        PlusAssign => "+="
+        MinusAssign => "-="
+        MultAssign => "*="
+        DivAssign => "/="
+        ModAssign => "%="
+      }
+      let expr_str = expr.to_string(color~)
+      let expr_lines = expr_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let is_last_step = i == self.steps.length() - 1
+      let expr_formatted = if is_last_step {
+        @parser.format_lines(
+          expr_lines,
+          head_with="└-\{name} \{op_str} ",
+          continue_with="  ",
+        )
+      } else {
+        @parser.format_lines(
+          expr_lines,
+          head_with="├-\{name} \{op_str} ",
+          continue_with="│ ",
+        )
+      }
+      result = "\{result}\n│ \{expr_formatted}"
+    }
+  }
+
+  // Format body
+  let body_str = self.body.to_string(color~)
+  let body_lines = body_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let body_formatted = @parser.format_lines(
+    body_lines,
+    head_with="└-body: ",
+    continue_with="        ",
+  )
+  result = "\{result}\n\{body_formatted}"
+  result
+}
 
 ///|
 pub fn Context::check_for_stmt(
@@ -89,4 +205,72 @@ pub fn Context::check_for_stmt(
     steps: checked_steps,
     body: checked_body,
   }
+}
+
+///|
+test "ForStmt to_string Test - Simple" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|for i = 0; i < 10; i += 1 { let x = i ; }
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check simple for loop
+  let (parsed, _) = @parser.parse_for_stmt(tokens)
+  let checked = ctx.check_for_stmt(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|for statement
+      #|├-inits:
+      #|│ └-i = int literal 0 (Int)
+      #|├-cond: binary expr: < (Bool)
+      #|│       ├-variable i (Int)
+      #|│       └-int literal 10 (Int)
+      #|├-steps:
+      #|│ └-i += int literal 1 (Int)
+      #|└-body: block (Unit)
+      #|        └-let statement
+      #|          ├-pattern: ident pattern x
+      #|          ├-type: : Int
+      #|          └-expr: variable i (Int)
+      #|        
+    ),
+  )
+}
+
+///|
+test "ForStmt to_string Test - Multiple Inits and Steps" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|for i = 0, j = 10; i < j; i += 1, j -= 1 { let sum = i + j ; }
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check for loop with multiple inits and steps
+  let (parsed, _) = @parser.parse_for_stmt(tokens)
+  let checked = ctx.check_for_stmt(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|for statement
+      #|├-inits:
+      #|│ ├-i = int literal 0 (Int)
+      #|│ └-j = int literal 10 (Int)
+      #|├-cond: binary expr: < (Bool)
+      #|│       ├-variable i (Int)
+      #|│       └-variable j (Int)
+      #|├-steps:
+      #|│ ├-i += int literal 1 (Int)
+      #|│ └-j -= int literal 1 (Int)
+      #|└-body: block (Unit)
+      #|        └-let statement
+      #|          ├-pattern: ident pattern sum
+      #|          ├-type: : Int
+      #|          └-expr: binary expr: + (Int)
+      #|                  ├-variable i (Int)
+      #|                  └-variable j (Int)
+      #|        
+    ),
+  )
 }

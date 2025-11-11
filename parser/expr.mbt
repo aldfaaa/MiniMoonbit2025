@@ -609,7 +609,6 @@ test "Expr to_string Test - Block" {
       #|    ├-variable x
       #|    └-int literal 1
       #|
-
     ),
   )
 
@@ -623,7 +622,6 @@ test "Expr to_string Test - Block" {
       #|└-return statement
       #|  └-int literal 10
       #|
-
     ),
   )
 }
@@ -646,7 +644,6 @@ test "Expr to_string Test - If" {
       #|        └-return statement
       #|          └-int literal 1
       #|        
-
     ),
   )
 
@@ -668,7 +665,6 @@ test "Expr to_string Test - If" {
       #|        └-return statement
       #|          └-int literal 0
       #|        
-
     ),
   )
 }

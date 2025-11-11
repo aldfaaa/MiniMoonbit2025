@@ -17,16 +17,30 @@ pub fn LeftValue::to_string(self : Self, color? : Bool = true) -> String {
       let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
       "\{prefix} \{name}"
     }
-    ArrayAccess(left_value, _index_expr) => {
+    ArrayAccess(left_value, index_expr) => {
       let prefix = "lvalue array access"
       let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
-      let inner_str = left_value.to_string(color~)
-      let lines = inner_str
+      let lvalue_str = left_value.to_string(color~)
+      let lvalue_lines = lvalue_str
         .split("\n")
         .map(fn(sv) { sv.to_string() })
         .to_array()
-      let formatted = format_lines(lines)
-      "\{prefix} [...]\n\{formatted}"
+      let lvalue_formatted = format_lines(
+        lvalue_lines,
+        head_with="├-",
+        continue_with="│ ",
+      )
+      let index_str = index_expr.to_string(color~)
+      let index_lines = index_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let index_formatted = format_lines(
+        index_lines,
+        head_with="└-",
+        continue_with="  ",
+      )
+      "\{prefix}\n\{lvalue_formatted}\n\{index_formatted}"
     }
     FieldAccess(left_value, field) => {
       let prefix = "lvalue field access"
@@ -109,8 +123,9 @@ test "LeftValue to_string Test - Basic" {
   inspect(
     left_value.to_string(color~),
     content=(
-      #|lvalue array access [...]
-      #|└-lvalue arr
+      #|lvalue array access
+      #|├-lvalue arr
+      #|└-int literal 0
     ),
   )
 
@@ -138,9 +153,11 @@ test "LeftValue to_string Test - Nested" {
   inspect(
     left_value.to_string(color~),
     content=(
-      #|lvalue array access [...]
-      #|└-lvalue array access [...]
-      #|  └-lvalue arr
+      #|lvalue array access
+      #|├-lvalue array access
+      #|│ ├-lvalue arr
+      #|│ └-int literal 0
+      #|└-int literal 1
     ),
   )
 
@@ -163,8 +180,9 @@ test "LeftValue to_string Test - Nested" {
     left_value.to_string(color~),
     content=(
       #|lvalue field access .data
-      #|└-lvalue array access [...]
-      #|  └-lvalue matrix
+      #|└-lvalue array access
+      #|  ├-lvalue matrix
+      #|  └-variable i
     ),
   )
 }

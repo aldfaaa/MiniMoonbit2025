@@ -77,9 +77,7 @@ pub fn TopFunction::to_string(self : Self, color? : Bool = true) -> String {
     .split("\n")
     .map(fn(sv) { sv.to_string() })
     .to_array()
-  let body_formatted = format_lines(
-    body_lines,
-  )
+  let body_formatted = format_lines(body_lines)
   result = "\{result}\n\{body_formatted}\n"
   result
 }
@@ -201,7 +199,6 @@ test "TopFunction to_string Test - Simple" {
       #|      └-variable y
       #|  
       #|
-
     ),
   )
 }
@@ -228,7 +225,6 @@ test "TopFunction to_string Test - With Type Tag" {
       #|    └-double literal 0
       #|  
       #|
-
     ),
   )
 }
@@ -253,7 +249,6 @@ test "TopFunction to_string Test - Main" {
       #|    └-expr: int literal 42
       #|  
       #|
-
     ),
   )
 }

@@ -20,6 +20,7 @@ pub(all) struct ApplyExpr {
   ty : TypeKind
   toks : ArrayView[@lexer.Token]
 }
+fn ApplyExpr::to_string(Self, color? : Bool) -> String
 impl Show for ApplyExpr
 
 pub(all) enum ApplyExprKind {
@@ -46,6 +47,7 @@ pub(all) struct AssignStmt {
   op : AssignOp
   expr : Expr
 }
+fn AssignStmt::to_string(Self, color? : Bool) -> String
 impl Show for AssignStmt
 
 pub(all) struct AtomExpr {
@@ -53,6 +55,7 @@ pub(all) struct AtomExpr {
   ty : TypeKind
   toks : ArrayView[@lexer.Token]
 }
+fn AtomExpr::to_string(Self, color? : Bool) -> String
 impl Show for AtomExpr
 
 pub(all) enum AtomExprKind {
@@ -104,6 +107,7 @@ pub(all) struct BlockExpr {
   stmts : Array[Stmt]
   ty : TypeKind
 }
+fn BlockExpr::to_string(Self, color? : Bool) -> String
 impl Show for BlockExpr
 
 pub(all) struct Context {
@@ -200,6 +204,7 @@ pub(all) struct Expr {
   ty : TypeKind
   toks : ArrayView[@lexer.Token]
 }
+fn Expr::to_string(Self, color? : Bool) -> String
 impl Show for Expr
 
 pub(all) enum ExprKind {
@@ -227,6 +232,7 @@ pub(all) struct ForStmt {
   steps : Array[(String, AssignOp, Expr)]
   body : BlockExpr
 }
+fn ForStmt::to_string(Self, color? : Bool) -> String
 impl Show for ForStmt
 
 pub(all) struct IfExpr {
@@ -235,12 +241,14 @@ pub(all) struct IfExpr {
   else_block : @either.Either[IfExpr, BlockExpr]?
   ty : TypeKind
 }
+fn IfExpr::to_string(Self, color? : Bool) -> String
 impl Show for IfExpr
 
 pub(all) struct LeftValue {
   kind : LeftValueKind
   ty : Type
 }
+fn LeftValue::to_string(Self, color? : Bool) -> String
 impl Show for LeftValue
 
 pub(all) enum LeftValueKind {
@@ -255,6 +263,7 @@ pub(all) struct LetMutStmt {
   ty : TypeKind
   expr : Expr
 }
+fn LetMutStmt::to_string(Self, color? : Bool) -> String
 impl Show for LetMutStmt
 
 pub(all) struct LetStmt {
@@ -262,6 +271,7 @@ pub(all) struct LetStmt {
   ty : TypeKind
   expr : Expr
 }
+fn LetStmt::to_string(Self, color? : Bool) -> String
 impl Show for LetStmt
 
 pub(all) struct LocalFunction {
@@ -270,6 +280,7 @@ pub(all) struct LocalFunction {
   ret_ty : Type
   body : BlockExpr
 }
+fn LocalFunction::to_string(Self, color? : Bool) -> String
 impl Show for LocalFunction
 
 pub struct MatchArm {
@@ -277,6 +288,7 @@ pub struct MatchArm {
   match_guard : Expr?
   body : Expr
 }
+fn MatchArm::to_string(Self, color? : Bool) -> String
 impl Show for MatchArm
 
 pub struct MatchExpr {
@@ -284,6 +296,7 @@ pub struct MatchExpr {
   arms : Array[MatchArm]
   ty : TypeKind
 }
+fn MatchExpr::to_string(Self, color? : Bool) -> String
 impl Show for MatchExpr
 
 pub(all) struct Param {
@@ -295,6 +308,7 @@ impl Show for Param
 pub(all) struct Pattern {
   kind : PatternKind
 }
+fn Pattern::to_string(Self, color? : Bool) -> String
 impl Eq for Pattern
 impl Show for Pattern
 
@@ -321,6 +335,7 @@ impl Show for Program
 pub(all) struct Stmt {
   kind : StmtKind
 }
+fn Stmt::to_string(Self, color? : Bool) -> String
 impl Show for Stmt
 
 pub(all) enum StmtKind {
@@ -340,6 +355,7 @@ pub(all) struct StructConstructExpr {
   fields : Array[(String, Expr)]
   toks : ArrayView[@lexer.Token]
 }
+fn StructConstructExpr::to_string(Self, color? : Bool) -> String
 impl Show for StructConstructExpr
 
 pub(all) struct StructDef {
@@ -403,6 +419,7 @@ pub(all) struct WhileStmt {
   cond : Expr
   body : BlockExpr
 }
+fn WhileStmt::to_string(Self, color? : Bool) -> String
 impl Show for WhileStmt
 
 // Type aliases

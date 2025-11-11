@@ -74,7 +74,6 @@ test "WhileStmt to_string Test - Simple" {
       #|          ├-pattern: ident pattern y
       #|          └-expr: int literal 1
       #|        
-
     ),
   )
 }
@@ -100,7 +99,6 @@ test "WhileStmt to_string Test - Complex Condition" {
       #|          ├-lvalue: lvalue i
       #|          └-expr: int literal 1
       #|        
-
     ),
   )
 }
@@ -131,7 +129,6 @@ test "WhileStmt to_string Test - Multiple Statements" {
       #|                  ├-variable x
       #|                  └-int literal 1
       #|        
-
     ),
   )
 }

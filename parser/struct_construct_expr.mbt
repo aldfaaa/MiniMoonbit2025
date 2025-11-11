@@ -3,7 +3,60 @@ pub(all) struct StructConstructExpr {
   name : String
   fields : Array[(String, Expr)]
   toks : ArrayView[Token]
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for StructConstructExpr with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn StructConstructExpr::to_string(
+  self : Self,
+  color? : Bool = true,
+) -> String {
+  let prefix = "struct construct: \{self.name}"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+  if self.fields.is_empty() {
+    return "\{prefix} {}"
+  }
+  let mut result = prefix
+  for i = 0; i < self.fields.length(); i = i + 1 {
+    let (field_name, expr) = self.fields[i]
+    let field_prefix = "\{field_name}:"
+    let field_prefix = if color {
+      @color.taint(field_prefix, Blue)
+    } else {
+      field_prefix
+    }
+    let expr_str = expr.to_string(color~)
+    let expr_lines = expr_str
+      .split("\n")
+      .map(fn(sv) { sv.to_string() })
+      .to_array()
+    let is_last = i == self.fields.length() - 1
+
+    // Format field name and expression
+    let field_formatted = if is_last {
+      let first_line = "└-\{field_prefix} " + expr_lines[0]
+      let mut formatted = first_line
+      for j = 1; j < expr_lines.length(); j = j + 1 {
+        formatted = formatted + "\n  " + expr_lines[j]
+      }
+      formatted
+    } else {
+      let first_line = "├-\{field_prefix} " + expr_lines[0]
+      let mut formatted = first_line
+      for j = 1; j < expr_lines.length(); j = j + 1 {
+        formatted = formatted + "\n│ " + expr_lines[j]
+      }
+      formatted
+    }
+    result = result + "\n" + field_formatted
+  }
+  result
+}
 
 ///|
 pub fn parse_struct_construct(
@@ -62,4 +115,73 @@ pub fn parse_struct_construct(
     tokens,
   )
   (atom_expr, tokens)
+}
+
+///|
+test "StructConstructExpr to_string Test - Simple" {
+  let color = false
+  let code =
+    #|Point::{ x: 1, y: 2 }
+  let tokens = @lexer.tokenize(code, source_file="test")
+
+  // Parse simple struct construct
+  let (atom_expr, _) = parse_struct_construct(tokens)
+  match atom_expr.kind {
+    StructConstruct(struct_construct) =>
+      inspect(
+        struct_construct.to_string(color~),
+        content=(
+          #|struct construct: Point
+          #|├-x: int literal 1
+          #|└-y: int literal 2
+        ),
+      )
+    _ => panic()
+  }
+}
+
+///|
+test "StructConstructExpr to_string Test - Empty" {
+  let color = false
+  let code =
+    #|Point::{}
+  let tokens = @lexer.tokenize(code, source_file="test")
+
+  // Parse empty struct construct
+  let (atom_expr, _) = parse_struct_construct(tokens)
+  match atom_expr.kind {
+    StructConstruct(struct_construct) =>
+      inspect(
+        struct_construct.to_string(color~),
+        content="struct construct: Point {}",
+      )
+    _ => panic()
+  }
+}
+
+///|
+test "StructConstructExpr to_string Test - Complex Fields" {
+  let color = false
+  let code =
+    #|Node::{ data: x + 1, next: get_next(), is_valid: true }
+  let tokens = @lexer.tokenize(code, source_file="test")
+
+  // Parse struct construct with complex fields
+  let (atom_expr, _) = parse_struct_construct(tokens)
+  match atom_expr.kind {
+    StructConstruct(struct_construct) =>
+      inspect(
+        struct_construct.to_string(color~),
+        content=(
+          #|struct construct: Node
+          #|├-data: binary expr: +
+          #|│ ├-variable x
+          #|│ └-int literal 1
+          #|├-next: function call
+          #|│ └-variable get_next
+          #|└-is_valid: bool literal true
+        ),
+      )
+    _ => panic()
+  }
 }

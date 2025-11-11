@@ -3,7 +3,48 @@ pub(all) struct LetMutStmt {
   name : String
   ty : TypeKind
   expr : Expr
-} derive(Show)
+}
+
+///|
+pub impl Show for LetMutStmt with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn LetMutStmt::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "let mut statement"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+
+  // Format name
+  let name_text = "name: \{self.name}"
+  let name_formatted = @parser.format_lines(
+    [name_text],
+    head_with="├-",
+    continue_with="│ ",
+  )
+
+  // Format type
+  let ty_str = ": \{self.ty}"
+  let type_formatted = @parser.format_lines(
+    [ty_str],
+    head_with="├-type: ",
+    continue_with="│       ",
+  )
+
+  // Format expression
+  let expr_str = self.expr.to_string(color~)
+  let expr_lines = expr_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let expr_formatted = @parser.format_lines(
+    expr_lines,
+    head_with="└-expr: ",
+    continue_with="        ",
+  )
+  "\{prefix}\n\{name_formatted}\n\{type_formatted}\n\{expr_formatted}"
+}
 
 ///|
 pub fn Context::check_let_mut_stmt(
@@ -29,4 +70,51 @@ pub fn Context::check_let_mut_stmt(
   }
   self.type_env.set(stmt.name, ty)
   checked_stmt
+}
+
+///|
+test "LetMutStmt to_string Test - Basic" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|let mut x = 42 ;
+  let tokens = @lexer.tokenize(code)
+
+  // Test simple let mut: let mut x = 42
+  let (stmt, _) = @parser.parse_stmt(tokens[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let mut statement
+      #|├-name: x
+      #|├-type: : Int
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
+}
+
+///|
+test "LetMutStmt to_string Test - Complex" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("a", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|let mut sum = a + 1 ;
+  let tokens = @lexer.tokenize(code)
+
+  // Test with binary expression: let mut sum = a + 1
+  let (stmt, _) = @parser.parse_stmt(tokens[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let mut statement
+      #|├-name: sum
+      #|├-type: : Int
+      #|└-expr: binary expr: + (Int)
+      #|        ├-variable a (Int)
+      #|        └-int literal 1 (Int)
+    ),
+  )
 }

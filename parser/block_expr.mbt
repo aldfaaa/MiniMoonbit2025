@@ -93,7 +93,6 @@ test "BlockExpr to_string Test - Single Statement" {
       #|  ├-pattern: ident pattern x
       #|  └-expr: int literal 42
       #|
-
     ),
   )
 }
@@ -123,7 +122,6 @@ test "BlockExpr to_string Test - Multiple Statements" {
       #|          ├-variable y
       #|          └-int literal 1
       #|
-
     ),
   )
 }
@@ -149,7 +147,6 @@ test "BlockExpr to_string Test - With Return" {
       #|└-return statement
       #|  └-variable sum
       #|
-
     ),
   )
 }
@@ -179,7 +176,6 @@ test "BlockExpr to_string Test - Complex" {
       #|    ├-variable x
       #|    └-int literal 2
       #|
-
     ),
   )
 }

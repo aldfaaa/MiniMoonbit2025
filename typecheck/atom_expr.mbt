@@ -3,7 +3,205 @@ pub(all) struct AtomExpr {
   kind : AtomExprKind
   ty : TypeKind
   toks : ArrayView[Token]
-} derive(Show)
+}
+
+///|
+pub impl Show for AtomExpr with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn AtomExpr::to_string(self : Self, color? : Bool = true) -> String {
+  let base_str = match self.kind {
+    Int(v) => {
+      let prefix = "int literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}"
+    }
+    Int64(v) => {
+      let prefix = "int64 literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}L"
+    }
+    UInt(v) => {
+      let prefix = "uint literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}U"
+    }
+    UInt64(v) => {
+      let prefix = "uint64 literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}UL"
+    }
+    Double(v) => {
+      let prefix = "double literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}"
+    }
+    Float(v) => {
+      let prefix = "float literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{v}F"
+    }
+    Char(c) => {
+      let prefix = "char literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} '\{c}'"
+    }
+    Bool(b) => {
+      let prefix = "bool literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{b}"
+    }
+    String(s) => {
+      let prefix = "string literal"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \"\{s}\""
+    }
+    Ident(name) => {
+      let prefix = "variable"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{name}"
+    }
+    Unit => {
+      let prefix = "unit"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} ()"
+    }
+    Paren(expr) => expr.to_string(color~)
+    Tuple(exprs) => {
+      let prefix = "tuple"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      if exprs.is_empty() {
+        "\{prefix} ()"
+      } else {
+        let mut result = "\{prefix}\n"
+        for i = 0; i < exprs.length(); i = i + 1 {
+          let expr_str = exprs[i].to_string(color~)
+          let lines = expr_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let is_last = i == exprs.length() - 1
+          let formatted = if is_last {
+            @parser.format_lines(lines, head_with="└-", continue_with="  ")
+          } else {
+            @parser.format_lines(lines, head_with="├-", continue_with="│ ")
+          }
+          result = result + formatted
+          if i < exprs.length() - 1 {
+            result = result + "\n"
+          }
+        }
+        result
+      }
+    }
+    Array(exprs) => {
+      let prefix = "array"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      if exprs.is_empty() {
+        "\{prefix} []"
+      } else {
+        let mut result = "\{prefix}\n"
+        for i = 0; i < exprs.length(); i = i + 1 {
+          let expr_str = exprs[i].to_string(color~)
+          let lines = expr_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let is_last = i == exprs.length() - 1
+          let formatted = if is_last {
+            @parser.format_lines(lines, head_with="└-", continue_with="  ")
+          } else {
+            @parser.format_lines(lines, head_with="├-", continue_with="│ ")
+          }
+          result = result + formatted
+          if i < exprs.length() - 1 {
+            result = result + "\n"
+          }
+        }
+        result
+      }
+    }
+    ArrayMake(size_expr, init_expr) => {
+      let prefix = "array make"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let size_str = size_expr.to_string(color~)
+      let init_str = init_expr.to_string(color~)
+      let size_lines = size_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let init_lines = init_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let size_formatted = @parser.format_lines(
+        size_lines,
+        head_with="├-size: ",
+        continue_with="│       ",
+      )
+      let init_formatted = @parser.format_lines(
+        init_lines,
+        head_with="└-init: ",
+        continue_with="        ",
+      )
+      "\{prefix}\n\{size_formatted}\n\{init_formatted}"
+    }
+    StructConstruct(struct_construct) => struct_construct.to_string(color~)
+    EnumConstruct(tag, variant, exprs) => {
+      let tag_prefix = "\{tag}::"
+      let prefix = "enum construct"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      if exprs.is_empty() {
+        "\{prefix} \{tag_prefix}\{variant}"
+      } else {
+        let mut result = "\{prefix} \{tag_prefix}\{variant}\n"
+        for i = 0; i < exprs.length(); i = i + 1 {
+          let expr_str = exprs[i].to_string(color~)
+          let lines = expr_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let is_last = i == exprs.length() - 1
+          let formatted = if is_last {
+            @parser.format_lines(lines, head_with="└-", continue_with="  ")
+          } else {
+            @parser.format_lines(lines, head_with="├-", continue_with="│ ")
+          }
+          result = result + formatted
+          if i < exprs.length() - 1 {
+            result = result + "\n"
+          }
+        }
+        result
+      }
+    }
+    Cast(ty, expr) => {
+      let prefix = "cast"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = ty.to_string()
+      let expr_str = expr.to_string(color~)
+      let lines = expr_str.split("\n").map(fn(sv) { sv.to_string() }).to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix} to \{ty_str}\n\{formatted}"
+    }
+    BitCast(ty, expr) => {
+      let prefix = "bitcast"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = ty.to_string()
+      let expr_str = expr.to_string(color~)
+      let lines = expr_str.split("\n").map(fn(sv) { sv.to_string() }).to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix} to \{ty_str}\n\{formatted}"
+    }
+  }
+  // Add type annotation in parentheses
+  let ty_str = self.ty.to_string()
+  let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+  "\{base_str} (\{ty_str})"
+}
 
 ///|
 pub(all) enum AtomExprKind {
@@ -137,4 +335,72 @@ pub fn Context::check_tuple_expr(
   let atom_expr_kind = AtomExprKind::Tuple(typed_exprs)
   let type_kind = TypeKind::Tuple(typed_exprs.map(e => e.ty))
   (atom_expr_kind, type_kind)
+}
+
+///|
+test "AtomExpr to_string Test" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|42 ; 100L ; 200U ; 300UL ; 3.14 ; 2.5F ; 'c' ; true ; "hello" ; x ; ()
+  let tokens = @lexer.tokenize(code)
+
+  // Test Int: 42
+  let (parsed, rest) = @parser.parse_atom_expr(tokens[:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="int literal 42 (Int)")
+
+  // Test Int64: 100L
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="int64 literal 100L (Int64)")
+
+  // Test UInt: 200U
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="uint literal 200U (UInt)")
+
+  // Test UInt64: 300UL
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="uint64 literal 300UL (UInt64)")
+
+  // Test Double: 3.14
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="double literal 3.14 (Double)")
+
+  // Test Float: 2.5F
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="float literal 2.5F (Float)")
+
+  // Test Char: 'c'
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="char literal 'c' (Char)")
+
+  // Test Bool: true
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="bool literal true (Bool)")
+
+  // Test String: "hello"
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content="string literal \"hello\" (String)",
+  )
+
+  // Test Ident: x
+  let (parsed, rest) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="variable x (Int)")
+
+  // Test Unit: ()
+  let (parsed, _) = @parser.parse_atom_expr(rest[1:])
+  let checked = ctx.check_atom_expr(parsed)
+  inspect(checked.to_string(color~), content="unit () (Unit)")
 }

@@ -146,7 +146,33 @@ pub(all) struct Program {
   extern_funcions : Map[String, ExternFunction]
   struct_defs : Map[String, StructDef]
   enum_defs : Map[String, EnumDef]
-} derive(Show)
+}
+
+///|
+pub fn Program::to_string(self : Self, color? : Bool = true) -> String {
+  let sb = StringBuilder::new()
+  for _, extern_fn in self.extern_funcions {
+    sb.write_string(extern_fn.to_string(color~))
+  }
+  for _, struct_def in self.struct_defs {
+    sb.write_string(struct_def.to_string(color~))
+  }
+  for _, enum_def in self.enum_defs {
+    sb.write_string(enum_def.to_string(color~))
+  }
+  for _, top_let in self.top_lets {
+    sb.write_string(top_let.to_string(color~))
+  }
+  for _, top_fn in self.top_functions {
+    sb.write_string(top_fn.to_string(color~))
+  }
+  sb.to_string()
+}
+
+///|
+pub impl Show for Program with output(self, logger) {
+  logger.write_string(self.to_string(color=true))
+}
 
 ///|
 pub fn Context::check_program(

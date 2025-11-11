@@ -156,7 +156,6 @@ test "LocalFunction to_string Test - Simple" {
       #|            ├-variable x
       #|            └-variable y
       #|        
-
     ),
   )
 }
@@ -184,7 +183,6 @@ test "LocalFunction to_string Test - With Types" {
       #|            ├-variable x
       #|            └-variable y
       #|        
-
     ),
   )
 }
@@ -207,7 +205,6 @@ test "LocalFunction to_string Test - No Params" {
       #|        └-return statement
       #|          └-int literal 42
       #|        
-
     ),
   )
 }
@@ -237,7 +234,6 @@ test "LocalFunction to_string Test - Complex Body" {
       #|        └-return statement
       #|          └-variable result
       #|        
-
     ),
   )
 }

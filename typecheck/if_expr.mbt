@@ -4,7 +4,87 @@ pub(all) struct IfExpr {
   then_block : BlockExpr
   else_block : Either[IfExpr, BlockExpr]?
   ty : TypeKind
-} derive(Show)
+}
+
+///|
+pub impl Show for IfExpr with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn IfExpr::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "if expression"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+  let ty_str = self.ty.to_string()
+  let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+  let prefix_with_type = "\{prefix} (\{ty_str})"
+
+  // Format condition
+  let cond_str = self.cond.to_string(color~)
+  let cond_lines = cond_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let cond_formatted = @parser.format_lines(
+    cond_lines,
+    head_with="├-cond: ",
+    continue_with="│       ",
+  )
+
+  // Format then block
+  let then_str = self.then_block.to_string(color~)
+  let then_lines = then_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  match self.else_block {
+    None => {
+      let then_formatted = @parser.format_lines(
+        then_lines,
+        head_with="└-then: ",
+        continue_with="        ",
+      )
+      "\{prefix_with_type}\n\{cond_formatted}\n\{then_formatted}"
+    }
+    Some(Either::Left(else_if)) => {
+      let then_formatted = @parser.format_lines(
+        then_lines,
+        head_with="├-then: ",
+        continue_with="│       ",
+      )
+      let else_if_str = else_if.to_string(color~)
+      let else_if_lines = else_if_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let else_if_formatted = @parser.format_lines(
+        else_if_lines,
+        head_with="└-else: ",
+        continue_with="        ",
+      )
+      "\{prefix_with_type}\n\{cond_formatted}\n\{then_formatted}\n\{else_if_formatted}"
+    }
+    Some(Either::Right(else_block)) => {
+      let then_formatted = @parser.format_lines(
+        then_lines,
+        head_with="├-then: ",
+        continue_with="│       ",
+      )
+      let else_str = else_block.to_string(color~)
+      let else_lines = else_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let else_formatted = @parser.format_lines(
+        else_lines,
+        head_with="└-else: ",
+        continue_with="        ",
+      )
+      "\{prefix_with_type}\n\{cond_formatted}\n\{then_formatted}\n\{else_formatted}"
+    }
+  }
+}
 
 ///|
 pub fn Context::check_if_expr(
@@ -45,4 +125,99 @@ pub fn Context::check_if_expr(
     else_block: checked_else_block,
     ty,
   }
+}
+
+///|
+test "IfExpr to_string Test - Simple" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Bool, mutable: false })
+  let code =
+    #|if x { 1 }
+  let tokens = @lexer.tokenize(code)
+
+  // Test simple if without else: if x { 1 }
+  let (parsed, _) = @parser.parse_if_expr(tokens[:])
+  let checked = ctx.check_if_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|if expression (Int)
+      #|├-cond: variable x (Bool)
+      #|└-then: block (Int)
+      #|        └-expr statement
+      #|          └-int literal 1 (Int)
+      #|        
+    ),
+  )
+}
+
+///|
+test "IfExpr to_string Test - With Else" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|if x > 0 { 1 } else { 0 }
+  let tokens = @lexer.tokenize(code)
+
+  // Test if-else: if x > 0 { 1 } else { 0 }
+  let (parsed, _) = @parser.parse_if_expr(tokens[:])
+  let checked = ctx.check_if_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|if expression (Int)
+      #|├-cond: binary expr: > (Bool)
+      #|│       ├-variable x (Int)
+      #|│       └-int literal 0 (Int)
+      #|├-then: block (Int)
+      #|│       └-expr statement
+      #|│         └-int literal 1 (Int)
+      #|│       
+      #|└-else: block (Int)
+      #|        └-expr statement
+      #|          └-int literal 0 (Int)
+      #|        
+    ),
+  )
+}
+
+///|
+test "IfExpr to_string Test - Else If" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|if x > 0 { 1 } else if x < 0 { 2 } else { 0 }
+  let tokens = @lexer.tokenize(code)
+
+  // Test else-if: if x > 0 { 1 } else if x < 0 { 2 } else { 0 }
+  let (parsed, _) = @parser.parse_if_expr(tokens[:])
+  let checked = ctx.check_if_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|if expression (Int)
+      #|├-cond: binary expr: > (Bool)
+      #|│       ├-variable x (Int)
+      #|│       └-int literal 0 (Int)
+      #|├-then: block (Int)
+      #|│       └-expr statement
+      #|│         └-int literal 1 (Int)
+      #|│       
+      #|└-else: if expression (Int)
+      #|        ├-cond: binary expr: < (Bool)
+      #|        │       ├-variable x (Int)
+      #|        │       └-int literal 0 (Int)
+      #|        ├-then: block (Int)
+      #|        │       └-expr statement
+      #|        │         └-int literal 2 (Int)
+      #|        │       
+      #|        └-else: block (Int)
+      #|                └-expr statement
+      #|                  └-int literal 0 (Int)
+      #|                
+    ),
+  )
 }

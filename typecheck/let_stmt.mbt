@@ -3,12 +3,135 @@ pub(all) struct LetStmt {
   pattern : Pattern
   ty : TypeKind
   expr : Expr
-} derive(Show)
+}
+
+///|
+pub impl Show for LetStmt with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn LetStmt::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "let statement"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+
+  // Format pattern
+  let pattern_str = self.pattern.to_string(color~)
+  let pattern_lines = pattern_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let pattern_formatted = @parser.format_lines(
+    pattern_lines,
+    head_with="├-pattern: ",
+    continue_with="│         ",
+  )
+
+  // Format type
+  let ty_str = ": \{self.ty}"
+  let type_formatted = @parser.format_lines(
+    [ty_str],
+    head_with="├-type: ",
+    continue_with="│       ",
+  )
+
+  // Format expression
+  let expr_str = self.expr.to_string(color~)
+  let expr_lines = expr_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let expr_formatted = @parser.format_lines(
+    expr_lines,
+    head_with="└-expr: ",
+    continue_with="        ",
+  )
+  "\{prefix}\n\{pattern_formatted}\n\{type_formatted}\n\{expr_formatted}"
+}
 
 ///|
 pub(all) struct Pattern {
   kind : PatternKind
-} derive(Show, Eq)
+} derive(Eq)
+
+///|
+pub impl Show for Pattern with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn Pattern::to_string(self : Self, color? : Bool = true) -> String {
+  match self.kind {
+    Wildcard => "_"
+    Ident(name) => {
+      let prefix = "ident pattern"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{name}"
+    }
+    Integer(i) => {
+      let prefix = "int pattern"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      "\{prefix} \{i}"
+    }
+    Tuple(patterns) => {
+      let prefix = "tuple pattern"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      if patterns.is_empty() {
+        "\{prefix} ()"
+      } else {
+        let mut result = "\{prefix}\n"
+        for i = 0; i < patterns.length(); i = i + 1 {
+          let pattern_str = patterns[i].to_string(color~)
+          let lines = pattern_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let is_last = i == patterns.length() - 1
+          let formatted = if is_last {
+            @parser.format_lines(lines, head_with="└-", continue_with="  ")
+          } else {
+            @parser.format_lines(lines, head_with="├-", continue_with="│ ")
+          }
+          result = result + formatted
+          if i < patterns.length() - 1 {
+            result = result + "\n"
+          }
+        }
+        result
+      }
+    }
+    EnumVariant(tag, variant, patterns) => {
+      let tag_prefix = "\{tag}::"
+      let prefix = "enum pattern"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      if patterns.is_empty() {
+        "\{prefix} \{tag_prefix}\{variant}"
+      } else {
+        let mut result = "\{prefix} \{tag_prefix}\{variant}\n"
+        for i = 0; i < patterns.length(); i = i + 1 {
+          let pattern_str = patterns[i].to_string(color~)
+          let lines = pattern_str
+            .split("\n")
+            .map(fn(sv) { sv.to_string() })
+            .to_array()
+          let is_last = i == patterns.length() - 1
+          let formatted = if is_last {
+            @parser.format_lines(lines, head_with="└-", continue_with="  ")
+          } else {
+            @parser.format_lines(lines, head_with="├-", continue_with="│ ")
+          }
+          result = result + formatted
+          if i < patterns.length() - 1 {
+            result = result + "\n"
+          }
+        }
+        result
+      }
+    }
+  }
+}
 
 ///|
 pub(all) enum PatternKind {
@@ -137,4 +260,52 @@ fn Context::bind_pattern_type(
       }
     }
   }
+}
+
+///|
+test "LetStmt to_string Test - Basic" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|let x = 42 ;
+  let tokens = @lexer.tokenize(code)
+
+  // Test simple let: let x = 42
+  let (stmt, _) = @parser.parse_stmt(tokens[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let statement
+      #|├-pattern: ident pattern x
+      #|├-type: : Int
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
+}
+
+///|
+test "LetStmt to_string Test - Pattern" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|let (a, b) = (1, 2) ;
+  let tokens = @lexer.tokenize(code)
+
+  // Test tuple pattern: let (a, b) = (1, 2)
+  let (stmt, _) = @parser.parse_stmt(tokens[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|let statement
+      #|├-pattern: tuple pattern
+      #|│         ├-ident pattern a
+      #|│         └-ident pattern b
+      #|├-type: : (Int, Int)
+      #|└-expr: tuple
+      #|        ├-int literal 1 (Int)
+      #|        └-int literal 2 (Int) ((Int, Int))
+    ),
+  )
 }

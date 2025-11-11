@@ -241,8 +241,9 @@ test "AssignStmt to_string Test - Complex" {
     assign_stmt.to_string(color~),
     content=(
       #|assign statement: =
-      #|├-lvalue: lvalue array access [...]
-      #|│         └-lvalue arr
+      #|├-lvalue: lvalue array access
+      #|│         ├-lvalue arr
+      #|│         └-int literal 0
       #|└-expr: int literal 10
     ),
   )
@@ -268,8 +269,9 @@ test "AssignStmt to_string Test - Complex" {
     content=(
       #|assign statement: =
       #|├-lvalue: lvalue field access .data
-      #|│         └-lvalue array access [...]
-      #|│           └-lvalue matrix
+      #|│         └-lvalue array access
+      #|│           ├-lvalue matrix
+      #|│           └-variable i
       #|└-expr: variable value
     ),
   )

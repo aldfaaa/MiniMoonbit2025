@@ -8,7 +8,8 @@ pub(all) struct Program {
   enum_defs : Map[String, EnumDef]
 }
 
-pub fn Program::to_string(self: Self, color?: Bool = true) -> String {
+///|
+pub fn Program::to_string(self : Self, color? : Bool = true) -> String {
   let sb = StringBuilder::new()
   for _, extern_fn in self.extern_funcions {
     sb.write_string(extern_fn.to_string(color~))
@@ -28,6 +29,7 @@ pub fn Program::to_string(self: Self, color?: Bool = true) -> String {
   sb.to_string()
 }
 
+///|
 pub impl Show for Program with output(self, logger) {
   logger.write_string(self.to_string(color=true))
 }

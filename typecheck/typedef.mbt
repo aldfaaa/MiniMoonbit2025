@@ -2,7 +2,12 @@
 pub(all) struct Type {
   kind : TypeKind
   mutable : Bool
-} derive(Show)
+}
+
+///|
+pub impl Show for Type with output(self, logger) {
+  logger.write_object(self.kind)
+}
 
 ///|
 pub(all) enum TypeKind {

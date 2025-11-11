@@ -16,17 +16,7 @@ pub fn Stmt::to_string(self : Self, color? : Bool = true) -> String {
     LetStmt(let_stmt) => let_stmt.to_string(color~)
     LetMutStmt(let_mut_stmt) => let_mut_stmt.to_string(color~)
     AssignStmt(assign_stmt) => assign_stmt.to_string(color~)
-    ExprStmt(expr) => {
-      let prefix = "expr statement"
-      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
-      let expr_str = expr.to_string(color~)
-      let expr_lines = expr_str
-        .split("\n")
-        .map(fn(sv) { sv.to_string() })
-        .to_array()
-      let expr_formatted = format_lines(expr_lines)
-      "\{prefix}\n\{expr_formatted}"
-    }
+    ExprStmt(expr) => expr.to_string(color~)
     ReturnStmt(expr_opt) => {
       let prefix = "return statement"
       let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
@@ -422,7 +412,6 @@ test "Stmt to_string Test - While" {
       #|          ├-lvalue: lvalue i
       #|          └-expr: int literal 1
       #|        
-
     ),
   )
 }
@@ -452,7 +441,6 @@ test "Stmt to_string Test - For" {
       #|          ├-pattern: ident pattern x
       #|          └-expr: variable i
       #|        
-
     ),
   )
 }
@@ -479,7 +467,6 @@ test "Stmt to_string Test - LocalFunction" {
       #|            ├-variable x
       #|            └-variable y
       #|        
-
     ),
   )
 }

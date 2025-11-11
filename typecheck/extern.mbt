@@ -4,7 +4,71 @@ pub(all) struct ExternFunction {
   param_list : Array[Param]
   ret_ty : TypeKind
   ffi_name : String
-} derive(Show)
+}
+
+///|
+pub impl Show for ExternFunction with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn ExternFunction::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "extern function: \{self.fname}"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+  let mut result = prefix
+
+  // Format parameters
+  if self.param_list.length() > 0 {
+    let params_prefix = "params:"
+    let params_prefix = if color {
+      @color.taint(params_prefix, Blue)
+    } else {
+      params_prefix
+    }
+    result = "\{result}\n├-\{params_prefix}"
+    for i = 0; i < self.param_list.length(); i = i + 1 {
+      let param = self.param_list[i]
+      let param_text = param.to_string(color~)
+      let is_last_param = i == self.param_list.length() - 1
+      let param_formatted = if is_last_param {
+        @parser.format_lines([param_text], head_with="└-", continue_with="  ")
+      } else {
+        @parser.format_lines(
+          [param_text],
+          head_with="├-",
+          continue_with="│ ",
+        )
+      }
+      result = "\{result}\n│ \{param_formatted}"
+    }
+  }
+
+  // Format return type
+  let ret_ty_str = self.ret_ty.to_string()
+  let ret_ty_str = if color {
+    @color.taint(ret_ty_str, Green)
+  } else {
+    ret_ty_str
+  }
+  let ret_text = "return: \{ret_ty_str}"
+  let ret_formatted = @parser.format_lines(
+    [ret_text],
+    head_with="├-",
+    continue_with="│ ",
+  )
+  result = "\{result}\n\{ret_formatted}"
+
+  // Format FFI name
+  let ffi_text = "ffi: \"\{self.ffi_name}\"\n"
+  let ffi_formatted = @parser.format_lines(
+    [ffi_text],
+    head_with="└-",
+    continue_with="  ",
+  )
+  result = "\{result}\n\{ffi_formatted}\n"
+  result
+}
 
 ///|
 pub fn Context::check_extern_function(
@@ -27,4 +91,53 @@ pub fn Context::check_extern_function(
     ret_ty,
     ffi_name: func.ffi_name,
   }
+}
+
+///|
+test "ExternFunction to_string Test - Simple" {
+  let color = false
+  let ctx = Context::new()
+  ctx.func_types.set("sqrt", Function([Double], Double))
+  let code =
+    #|extern "c" fn sqrt(x: Double) -> Double = "sqrt" ;
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check simple extern function
+  let (parsed, _) = @parser.parse_extern_function(tokens)
+  let checked = ctx.check_extern_function(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|extern function: sqrt
+      #|├-params:
+      #|│ └-x: Double
+      #|├-return: Double
+      #|└-ffi: "sqrt"
+    ),
+  )
+}
+
+///|
+test "ExternFunction to_string Test - Multiple Params" {
+  let color = false
+  let ctx = Context::new()
+  ctx.func_types.set("pow", Function([Double, Double], Double))
+  let code =
+    #|extern "c" fn pow(x: Double, y: Double) -> Double = "pow" ;
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check extern function with multiple parameters
+  let (parsed, _) = @parser.parse_extern_function(tokens)
+  let checked = ctx.check_extern_function(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|extern function: pow
+      #|├-params:
+      #|│ ├-x: Double
+      #|│ └-y: Double
+      #|├-return: Double
+      #|└-ffi: "pow"
+    ),
+  )
 }

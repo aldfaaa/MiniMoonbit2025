@@ -273,7 +273,6 @@ test "ForStmt to_string Test - Simple" {
       #|          ├-pattern: ident pattern x
       #|          └-expr: variable i
       #|        
-
     ),
   )
 }
@@ -307,7 +306,6 @@ test "ForStmt to_string Test - Multiple Inits and Steps" {
       #|                  ├-variable i
       #|                  └-variable j
       #|        
-
     ),
   )
 }
@@ -337,7 +335,6 @@ test "ForStmt to_string Test - Different Operators" {
       #|          ├-pattern: ident pattern x
       #|          └-expr: variable i
       #|        
-
     ),
   )
 }
@@ -372,7 +369,6 @@ test "ForStmt to_string Test - Complex Body" {
       #|                  ├-variable x
       #|                  └-int literal 2
       #|        
-
     ),
   )
 }

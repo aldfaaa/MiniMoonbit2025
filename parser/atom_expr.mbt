@@ -124,6 +124,7 @@ pub fn AtomExpr::to_string(self : Self, color? : Bool = true) -> String {
         result
       }
     }
+    StructConstruct(struct_construct) => struct_construct.to_string(color~)
     _ => {
       let (prefix, value) = match self.kind {
         Int(v) => ("int literal", "\{v}")
@@ -142,8 +143,8 @@ pub fn AtomExpr::to_string(self : Self, color? : Bool = true) -> String {
         | Tuple(_)
         | Array(_)
         | ArrayMake(_, _)
-        | EnumConstruct(_, _, _) => ("", "")
-        StructConstruct(_) => ("struct construct", "<struct>")
+        | EnumConstruct(_, _, _)
+        | StructConstruct(_) => ("", "")
       }
       let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
       "\{prefix} \{value}"

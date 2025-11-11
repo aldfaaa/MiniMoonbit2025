@@ -3,7 +3,99 @@ pub(all) struct Expr {
   kind : ExprKind
   ty : TypeKind
   toks : ArrayView[Token]
-} derive(Show)
+}
+
+///|
+pub impl Show for Expr with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn Expr::to_string(self : Self, color? : Bool = true) -> String {
+  match self.kind {
+    // For ApplyExpr case, directly return apply_expr's to_string without adding extra type
+    ApplyExpr(apply_expr) => apply_expr.to_string(color~)
+    NotExpr(expr) => {
+      let prefix = "unary operator !"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let inner_str = expr.to_string(color~)
+      let lines = inner_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix_with_type}\n\{formatted}"
+    }
+    NegExpr(expr) => {
+      let prefix = "unary operator -"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let inner_str = expr.to_string(color~)
+      let lines = inner_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix_with_type}\n\{formatted}"
+    }
+    BinaryExpr(op, left, right) => {
+      let op_str = match op {
+        Add => "+"
+        Sub => "-"
+        Mul => "*"
+        Div => "/"
+        Mod => "%"
+        ShiftLeft => "<<"
+        ShiftRight => ">>"
+        Eq => "=="
+        NE => "!="
+        LT => "<"
+        GT => ">"
+        LE => "<="
+        GE => ">="
+        And => "&&"
+        Or => "||"
+        BitAnd => "&"
+        BitOr => "|"
+      }
+      let prefix = "binary expr: \{op_str}"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let left_str = left.to_string(color~)
+      let right_str = right.to_string(color~)
+      let left_lines = left_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let right_lines = right_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let left_formatted = @parser.format_lines(
+        left_lines,
+        head_with="├-",
+        continue_with="│ ",
+      )
+      let right_formatted = @parser.format_lines(
+        right_lines,
+        head_with="└-",
+        continue_with="  ",
+      )
+      "\{prefix_with_type}\n\{left_formatted}\n\{right_formatted}"
+    }
+    BlockExpr(block_expr) => block_expr.to_string(color~)
+    IfExpr(if_expr) => if_expr.to_string(color~)
+    MatchExpr(match_expr) => match_expr.to_string(color~)
+  }
+}
 
 ///|
 pub(all) enum ExprKind {
@@ -267,4 +359,122 @@ pub fn Context::check_expr(self : Self, expr : @parser.Expr) -> Expr {
       }
     }
   }
+}
+
+///|
+test "Expr to_string Test - Basic" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Bool, mutable: false })
+  ctx.type_env.set("y", { kind: TypeKind::Int, mutable: false })
+  ctx.type_env.set("z", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|42 ; !x ; -y ; 1 + 2 ; y == z
+  let tokens = @lexer.tokenize(code)
+
+  // Test ApplyExpr - Int: 42
+  let (parsed, rest) = @parser.parse_expr(tokens[:])
+  let checked = ctx.check_expr(parsed)
+  inspect(checked.to_string(color~), content="int literal 42 (Int)")
+
+  // Test NotExpr: !x
+  let (parsed, rest) = @parser.parse_expr(rest[1:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|unary operator ! (Bool)
+      #|└-variable x (Bool)
+    ),
+  )
+
+  // Test NegExpr: -y
+  let (parsed, rest) = @parser.parse_expr(rest[1:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|unary operator - (Int)
+      #|└-variable y (Int)
+    ),
+  )
+
+  // Test BinaryExpr Add: 1 + 2
+  let (parsed, rest) = @parser.parse_expr(rest[1:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|binary expr: + (Int)
+      #|├-int literal 1 (Int)
+      #|└-int literal 2 (Int)
+    ),
+  )
+
+  // Test BinaryExpr Eq: y == z
+  let (parsed, _) = @parser.parse_expr(rest[1:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|binary expr: == (Bool)
+      #|├-variable y (Int)
+      #|└-variable z (Int)
+    ),
+  )
+}
+
+///|
+test "Expr to_string Test - BlockExpr" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|{ let x = 42 }
+  let tokens = @lexer.tokenize(code)
+
+  // Test BlockExpr: { let x = 42 }
+  let (parsed, _) = @parser.parse_expr(tokens[:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|block (Unit)
+      #|└-let statement
+      #|  ├-pattern: ident pattern x
+      #|  ├-type: : Int
+      #|  └-expr: int literal 42 (Int)
+      #|
+    ),
+  )
+}
+
+///|
+test "Expr to_string Test - IfExpr" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: false })
+  let code =
+    #|if x > 0 { 1 } else { 0 }
+  let tokens = @lexer.tokenize(code)
+
+  // Test IfExpr: if x > 0 { 1 } else { 0 }
+  let (parsed, _) = @parser.parse_expr(tokens[:])
+  let checked = ctx.check_expr(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|if expression (Int)
+      #|├-cond: binary expr: > (Bool)
+      #|│       ├-variable x (Int)
+      #|│       └-int literal 0 (Int)
+      #|├-then: block (Int)
+      #|│       └-expr statement
+      #|│         └-int literal 1 (Int)
+      #|│       
+      #|└-else: block (Int)
+      #|        └-expr statement
+      #|          └-int literal 0 (Int)
+      #|        
+    ),
+  )
 }

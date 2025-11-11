@@ -3,7 +3,42 @@ pub struct TopLet {
   name : String
   ty : Type
   expr : Expr
-} derive(Show)
+}
+
+///|
+pub impl Show for TopLet with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn TopLet::to_string(self : Self, color? : Bool = true) -> String {
+  let prefix = "top let: \{self.name}"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+
+  // Format type
+  let ty_str = self.ty.kind.to_string()
+  let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+  let type_text = "type: \{ty_str}"
+  let type_formatted = @parser.format_lines(
+    [type_text],
+    head_with="├-",
+    continue_with="│ ",
+  )
+
+  // Format expression
+  let expr_str = self.expr.to_string(color~)
+  let expr_lines = expr_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let expr_formatted = @parser.format_lines(
+    expr_lines,
+    head_with="└-expr: ",
+    continue_with="        ",
+  )
+  "\{prefix}\n\{type_formatted}\n\{expr_formatted}\n"
+}
 
 ///|
 pub fn Context::check_top_let(
@@ -25,4 +60,46 @@ pub fn Context::check_top_let(
   let checked_top_let = TopLet::{ name: top_let.name, ty, expr: checked_expr }
   self.type_env.set(top_let.name, ty)
   checked_top_let
+}
+
+///|
+test "TopLet to_string Test - Simple" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|let pi = 3.14 ;
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check simple top let
+  let (parsed, _) = @parser.parse_top_let(tokens)
+  let checked = ctx.check_top_let(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|top let: pi
+      #|├-type: Double
+      #|└-expr: double literal 3.14 (Double)
+    ),
+  )
+}
+
+///|
+test "TopLet to_string Test - With Type" {
+  let color = false
+  let ctx = Context::new()
+  let code =
+    #|let count : Int = 42 ;
+  let tokens = @lexer.tokenize(code)
+
+  // Parse and check top let with type annotation
+  let (parsed, _) = @parser.parse_top_let(tokens)
+  let checked = ctx.check_top_let(parsed)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|top let: count
+      #|├-type: Int
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
 }

@@ -2,7 +2,68 @@
 pub(all) struct LeftValue {
   kind : LeftValueKind
   ty : Type
-} derive(Show)
+}
+
+///|
+pub impl Show for LeftValue with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn LeftValue::to_string(self : Self, color? : Bool = true) -> String {
+  match self.kind {
+    Ident(name) => {
+      let prefix = "lvalue"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      "\{prefix} \{name} (\{ty_str})"
+    }
+    ArrayAccess(left_value, index_expr) => {
+      let prefix = "lvalue array access"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} (\{ty_str})"
+      let lvalue_str = left_value.to_string(color~)
+      let lvalue_lines = lvalue_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let lvalue_formatted = @parser.format_lines(
+        lvalue_lines,
+        head_with="├-",
+        continue_with="│ ",
+      )
+      let index_str = index_expr.to_string(color~)
+      let index_lines = index_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let index_formatted = @parser.format_lines(
+        index_lines,
+        head_with="└-",
+        continue_with="  ",
+      )
+      "\{prefix_with_type}\n\{lvalue_formatted}\n\{index_formatted}"
+    }
+    FieldAccess(left_value, field) => {
+      let prefix = "lvalue field access"
+      let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+      let ty_str = self.ty.to_string()
+      let ty_str = if color { @color.taint(ty_str, Green) } else { ty_str }
+      let prefix_with_type = "\{prefix} .\{field} (\{ty_str})"
+      let inner_str = left_value.to_string(color~)
+      let lines = inner_str
+        .split("\n")
+        .map(fn(sv) { sv.to_string() })
+        .to_array()
+      let formatted = @parser.format_lines(lines)
+      "\{prefix_with_type}\n\{formatted}"
+    }
+  }
+}
 
 ///|
 pub(all) enum LeftValueKind {
@@ -16,7 +77,52 @@ pub(all) struct AssignStmt {
   left_value : LeftValue
   op : AssignOp
   expr : Expr
-} derive(Show)
+}
+
+///|
+pub impl Show for AssignStmt with output(self, logger) {
+  let s = self.to_string(color=true)
+  logger.write_string(s)
+}
+
+///|
+pub fn AssignStmt::to_string(self : Self, color? : Bool = true) -> String {
+  let op_str = match self.op {
+    Assign => "="
+    PlusAssign => "+="
+    MinusAssign => "-="
+    MultAssign => "*="
+    DivAssign => "/="
+    ModAssign => "%="
+  }
+  let prefix = "assign statement: \{op_str}"
+  let prefix = if color { @color.taint(prefix, Magenta) } else { prefix }
+
+  // Format left value
+  let lvalue_str = self.left_value.to_string(color~)
+  let lvalue_lines = lvalue_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let lvalue_formatted = @parser.format_lines(
+    lvalue_lines,
+    head_with="├-lvalue: ",
+    continue_with="│         ",
+  )
+
+  // Format expression
+  let expr_str = self.expr.to_string(color~)
+  let expr_lines = expr_str
+    .split("\n")
+    .map(fn(sv) { sv.to_string() })
+    .to_array()
+  let expr_formatted = @parser.format_lines(
+    expr_lines,
+    head_with="└-expr: ",
+    continue_with="        ",
+  )
+  "\{prefix}\n\{lvalue_formatted}\n\{expr_formatted}"
+}
 
 ///|
 pub(all) enum AssignOp {
@@ -121,4 +227,89 @@ pub fn Context::check_assign_stmt(
     )
   }
   AssignStmt::{ left_value: checked_left_value, op, expr: checked_expr }
+}
+
+///|
+test "AssignStmt to_string Test - Basic" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("x", { kind: TypeKind::Int, mutable: true })
+
+  // Test simple assign: x = 42
+  let code1 = "x = 42 ;"
+  let tokens1 = @lexer.tokenize(code1)
+  let (stmt, _) = @parser.parse_stmt(tokens1[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|assign statement: =
+      #|├-lvalue: lvalue x (Int)
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
+
+  // Test += operator: x += 42
+  let code2 = "x += 42 ;"
+  let tokens2 = @lexer.tokenize(code2)
+  let (stmt, _) = @parser.parse_stmt(tokens2[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|assign statement: +=
+      #|├-lvalue: lvalue x (Int)
+      #|└-expr: int literal 42 (Int)
+    ),
+  )
+}
+
+///|
+test "AssignStmt to_string Test - Complex" {
+  let color = false
+  let ctx = Context::new()
+  ctx.type_env.set("arr", {
+    kind: TypeKind::Array(TypeKind::Int),
+    mutable: true,
+  })
+  ctx.type_env.set("point", { kind: TypeKind::Struct("Point"), mutable: true })
+  ctx.struct_defs.set("Point", {
+    name: "Point",
+    fields: [
+      { name: "x", ty: { kind: TypeKind::Int, mutable: true } },
+      { name: "y", ty: { kind: TypeKind::Int, mutable: true } },
+    ],
+    methods: Map::new(),
+  })
+
+  // Test array access: arr[0] = 10
+  let code1 = "arr[0] = 10 ;"
+  let tokens1 = @lexer.tokenize(code1)
+  let (stmt, _) = @parser.parse_stmt(tokens1[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|assign statement: =
+      #|├-lvalue: lvalue array access (Int)
+      #|│         ├-lvalue arr (Array[Int])
+      #|│         └-int literal 0 (Int)
+      #|└-expr: int literal 10 (Int)
+    ),
+  )
+
+  // Test field access: point.x = 20
+  let code2 = "point.x = 20 ;"
+  let tokens2 = @lexer.tokenize(code2)
+  let (stmt, _) = @parser.parse_stmt(tokens2[:])
+  let checked = ctx.check_stmt(stmt)
+  inspect(
+    checked.to_string(color~),
+    content=(
+      #|assign statement: =
+      #|├-lvalue: lvalue field access .x (Int)
+      #|│         └-lvalue point (Point)
+      #|└-expr: int literal 20 (Int)
+    ),
+  )
 }
