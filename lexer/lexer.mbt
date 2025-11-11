@@ -534,15 +534,17 @@ fn tokenize_number(
           (TokenKind::UInt(value), total_len + 1, rest)
         }
         ['L', .. rest] => {
-          let value = @strconv.parse_int64(hex_str, base=16) catch {
+          let value = @strconv.parse_uint64(hex_str, base=16) catch {
             _ => raise TokenizeError("Invalid hexadecimal Int64 literal: 0x\{hex_str}")
           }
+          let value = value.reinterpret_as_int64()
           (TokenKind::Int64(value), total_len + 1, rest)
         }
         _ => {
-          let value = @strconv.parse_int(hex_str, base=16) catch {
+          let value = @strconv.parse_uint(hex_str, base=16) catch {
             _ => raise TokenizeError("Invalid hexadecimal Int literal: 0x\{hex_str}")
           }
+          let value = value.reinterpret_as_int()
           (TokenKind::Int(value), total_len, rest)
         }
       }
