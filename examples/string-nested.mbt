@@ -17,5 +17,16 @@ fn main {
   for i = 0; i < middle.length(); i = i + 1 {
     println(middle[i])
   }
+  
+  // Test string comparison
+  if result == "FooBarBaz" {
+    println("result is FooBarBaz")
+  }
+  if middle == "PreFooBarBazPost" {
+    println("middle is PreFooBarBazPost")
+  }
+  if s1 == "Foo" {
+    println("s1 is Foo")
+  }
 }
 

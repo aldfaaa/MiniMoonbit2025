@@ -104,6 +104,7 @@ pub fn knf_transform(
   context.globals.set("get_array_length", Function([Int], Int)) // Takes array, returns length
   context.globals.set("__builtin_get_string_length", Function([String], Int))
   context.globals.set("__builtin_get_char_in_string", Function([String, Int], Char))
+  context.globals.set("moonbit_string_eq", Function([String, String], Bool))
   
   // Array push methods
   context.globals.set("array_int_push", Function([Int, Int], Unit))

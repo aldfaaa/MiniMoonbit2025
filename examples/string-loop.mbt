@@ -17,5 +17,16 @@ fn main {
   for i = 0; i < joined.length(); i = i + 1 {
     println(joined[i])
   }
+  
+  // Test string comparison
+  if repeated == "ABABAB" {
+    println("repeated is ABABAB")
+  }
+  if joined == "ABABABXY" {
+    println("joined is ABABABXY")
+  }
+  if base == "AB" {
+    println("base is AB")
+  }
 }
 

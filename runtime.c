@@ -400,6 +400,18 @@ char __builtin_get_char_in_string(MoonBitStr* str, int32_t index) {
   return str->data[index];
 }
 
+uint8_t moonbit_string_eq(MoonBitStr* str1, MoonBitStr* str2) {
+  if (str1->length != str2->length) {
+    return 0; // not equal
+  }
+  for (int i = 0; i < str1->length; i++) {
+    if (str1->data[i] != str2->data[i]) {
+      return 0; // not equal
+    }
+  }
+  return 1; // equal
+}
+
 MoonBitStr* __builtin_int_to_string(int32_t value) {
   char buffer[32];
   snprintf(buffer, sizeof(buffer), "%d", value);

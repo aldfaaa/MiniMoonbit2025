@@ -212,6 +212,12 @@ pub fn Context::expr_to_knf(
         return (stmts, Call(concat_func, [lhs_name, rhs_name]))
       }
       
+      // Handle String comparison
+      if bin_op is Eq && left_expr.ty is String {
+        let strcmp_func = Name::{ id: "moonbit_string_eq", slot: 0 }
+        return (stmts, Call(strcmp_func, [lhs_name, rhs_name]))
+      }
+      
       // Handle shift operations: right operand must match left operand type
       let rhs_name_adjusted = if bin_op is (ShiftLeft | ShiftRight) {
         // Check if types are different and need casting

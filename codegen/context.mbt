@@ -125,6 +125,7 @@ pub fn Context::new(mod_name : String) -> Context {
   let builtin_get_string_length_ty = try! llvm_ctx.getFunctionType(i32ty, [ptrty])
   let builtin_string_concat_ty = try! llvm_ctx.getFunctionType(ptrty, [ptrty, ptrty])
   let builtin_get_char_in_string_ty = try! llvm_ctx.getFunctionType(i8ty, [ptrty, i32ty])
+  let moonbit_string_eq_ty = try! llvm_ctx.getFunctionType(boolty, [ptrty, ptrty])
   // Type conversion to string functions
   let builtin_int_to_string_ty = try! llvm_ctx.getFunctionType(ptrty, [i32ty])
   let builtin_int64_to_string_ty = try! llvm_ctx.getFunctionType(ptrty, [i64ty])
@@ -182,6 +183,7 @@ pub fn Context::new(mod_name : String) -> Context {
     "__builtin_get_string_length": builtin_get_string_length_ty,
     "__builtin_string_concat": builtin_string_concat_ty,
     "__builtin_get_char_in_string": builtin_get_char_in_string_ty,
+    "moonbit_string_eq": moonbit_string_eq_ty,
     "__builtin_int_to_string": builtin_int_to_string_ty,
     "__builtin_int64_to_string": builtin_int64_to_string_ty,
     "__builtin_float_to_string": builtin_float_to_string_ty,
