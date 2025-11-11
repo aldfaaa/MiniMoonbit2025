@@ -8,5 +8,6 @@
     "Kaida-Amethyst/MiniMoonBit/typecheck",
     "Kaida-Amethyst/MiniMoonBit/knf",
     "Kaida-Amethyst/MiniMoonBit/codegen",
-  ]
+  ],
+  "warn-list" : "-29"
 }

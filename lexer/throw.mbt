@@ -4,12 +4,12 @@ pub fn throw_(tok: Token, msg: String, level: ThrowLevel) -> Unit {
   let { line, col, code, file, .. } = tok
   let str_builder = StringBuilder::new()
   let color = match level {
-    Error => Color::Red
-    Warning => Color::Yellow
+    Error => @color.Color::Red
+    Warning => @color.Color::Yellow
   }
 
   // 第一行：文件名、行号和列号
-  let head_line = taint(
+  let head_line = @color.taint(
     "[\{file}:\{line}:\{col}] \{level}:",
     Magenta,
   )
@@ -33,7 +33,7 @@ pub fn throw_(tok: Token, msg: String, level: ThrowLevel) -> Unit {
   for _ in 1..<col{
     indent += " "
   }
-  let msg = taint("^ \{msg}", color)
+  let msg = @color.taint("^ \{msg}", color)
   str_builder.write_string("\{line+1}|\{indent}\{msg}\n")
   let w = str_builder.to_string()
   println(w)
@@ -58,20 +58,4 @@ fn get_code_line(code: String, line : Int) -> String {
     }
   }
   sb.to_string()
-}
-
-///|
-priv enum Color {
-  Red
-  Yellow
-  Magenta
-}
-
-///|
-fn taint(msg : String, color : Color) -> String {
-  match color {
-    Red => "\x1b[31m\{msg}\x1b[0m"
-    Yellow => "\x1b[33m\{msg}\x1b[0m"
-    Magenta => "\x1b[35m\{msg}\x1b[0m"
-  }
 }
