@@ -497,102 +497,141 @@ fn tokenize_lower_ident(code : StringView) -> (TokenKind, Int, StringView) {
 fn tokenize_number(
   code : StringView,
 ) -> (TokenKind, Int, StringView) raise TokenizeError {
-  let sb = StringBuilder::new()
-  let mut is_float = false
+  // Check for hexadecimal integer literal (0x or 0X)
+  match code {
+    ['0', 'x' | 'X', '0'..='9' | 'a'..='f' | 'A'..='F', ..] => {
+      // Parse hexadecimal number
+      let hex_sb = StringBuilder::new()
+      let rest = match code {
+        ['0', 'x' | 'X', .. rest] => rest
+        _ => panic()
+      }
+      // Parse hex digits
+      let rest = loop rest {
+        ['0'..='9' | 'a'..='f' | 'A'..='F' as c, .. rest] => {
+          hex_sb.write_char(c)
+          continue rest
+        }
+        rest => break rest
+      }
+      let hex_str = hex_sb.to_string()
+      let total_len = 2 + hex_str.length() // "0x" + hex digits
+      
+      // Check for L suffix
+      match rest {
+        ['L', .. rest] => {
+          let value = @strconv.parse_int64(hex_str, base=16) catch {
+            _ => raise TokenizeError("Invalid hexadecimal Int64 literal: 0x\{hex_str}")
+          }
+          (TokenKind::Int64(value), total_len + 1, rest)
+        }
+        _ => {
+          let value = @strconv.parse_int(hex_str, base=16) catch {
+            _ => raise TokenizeError("Invalid hexadecimal Int literal: 0x\{hex_str}")
+          }
+          (TokenKind::Int(value), total_len, rest)
+        }
+      }
+    }
+    _ => {
+      // Parse decimal number
+      let sb = StringBuilder::new()
+      let mut is_float = false
 
-  // Parse the numeric part
-  let rest = loop code {
-    ['0'..='9' as c, .. rest] => {
-      sb.write_char(c)
-      continue rest
-    }
-    rest => break rest
-  }
-  // Check for decimal point (float)
-  let rest = match rest {
-    ['.', '0'..='9', ..] as dot_rest => {
-      is_float = true
-      sb.write_char('.')
-      let rest_after_dot = match dot_rest {
-        ['.', .. rest] => rest
-        _ => panic()
-      }
-      // Parse fractional part
-      loop rest_after_dot {
+      // Parse the numeric part
+      let rest = loop code {
         ['0'..='9' as c, .. rest] => {
           sb.write_char(c)
           continue rest
         }
         rest => break rest
       }
+      // Check for decimal point (float)
+      let rest = match rest {
+        ['.', '0'..='9', ..] as dot_rest => {
+          is_float = true
+          sb.write_char('.')
+          let rest_after_dot = match dot_rest {
+            ['.', .. rest] => rest
+            _ => panic()
+          }
+          // Parse fractional part
+          loop rest_after_dot {
+            ['0'..='9' as c, .. rest] => {
+              sb.write_char(c)
+              continue rest
+            }
+            rest => break rest
+          }
+        }
+        _ => rest
+      }
+      
+      // Check for exponent (e or E)
+      let rest = match rest {
+        ['e' | 'E' as e, ..] as exp_rest => {
+          is_float = true
+          sb.write_char(e)
+          let rest_after_e = match exp_rest {
+            ['e' | 'E', .. rest] => rest
+            _ => panic()
+          }
+          // Check for optional sign
+          let rest_after_sign = match rest_after_e {
+            ['+' | '-' as sign, .. rest] => {
+              sb.write_char(sign)
+              rest
+            }
+            _ => rest_after_e
+          }
+          // Parse exponent digits
+          let rest_after_exp = loop rest_after_sign {
+            ['0'..='9' as c, .. rest] => {
+              sb.write_char(c)
+              continue rest
+            }
+            rest => break rest
+          }
+          rest_after_exp
+        }
+        _ => rest
+      }
+      
+      let num_str = sb.to_string()
+      // Check for type suffix (L for Int64, F for Float)
+      if is_float {
+        match rest {
+          ['F', .. rest] => {
+            let value = @strconv.parse_double(num_str) catch {
+              _ => raise TokenizeError("Invalid Float literal: \{num_str}")
+            }
+            (TokenKind::Float(value), num_str.length() + 1, rest)
+          }
+          _ => {
+            let value = @strconv.parse_double(num_str) catch {
+              _ => raise TokenizeError("Invalid Double literal: \{num_str}")
+            }
+            (TokenKind::Double(value), num_str.length(), rest)
+          }
+        }
+      } else {
+        match rest {
+          ['L', .. rest] => {
+            let value = @strconv.parse_int64(num_str) catch {
+              _ => raise TokenizeError("Invalid Int64 literal: \{num_str}")
+            }
+            (TokenKind::Int64(value), num_str.length() + 1, rest)
+          }
+          _ => {
+            let value = @strconv.parse_int(num_str) catch {
+              _ => raise TokenizeError("Invalid Int literal: \{num_str}")
+            }
+            (TokenKind::Int(value), num_str.length(), rest)
+          }
+        }
+      }
     }
-    _ => rest
   }
-  
-  // Check for exponent (e or E)
-  let rest = match rest {
-    ['e' | 'E' as e, ..] as exp_rest => {
-      is_float = true
-      sb.write_char(e)
-      let rest_after_e = match exp_rest {
-        ['e' | 'E', .. rest] => rest
-        _ => panic()
-      }
-      // Check for optional sign
-      let rest_after_sign = match rest_after_e {
-        ['+' | '-' as sign, .. rest] => {
-          sb.write_char(sign)
-          rest
-        }
-        _ => rest_after_e
-      }
-      // Parse exponent digits
-      let rest_after_exp = loop rest_after_sign {
-        ['0'..='9' as c, .. rest] => {
-          sb.write_char(c)
-          continue rest
-        }
-        rest => break rest
-      }
-      rest_after_exp
-    }
-    _ => rest
-  }
-  
-  let num_str = sb.to_string()
-  // Check for type suffix (L for Int64, F for Float)
-  let (kind, len, rest) = if is_float {
-    match rest {
-      ['F', .. rest] => {
-        let value = @strconv.parse_double(num_str) catch {
-          _ => raise TokenizeError("Invalid Float literal: \{num_str}")
-        }
-        (TokenKind::Float(value), num_str.length() + 1, rest)
-      }
-      _ => {
-        let value = @strconv.parse_double(num_str) catch {
-          _ => raise TokenizeError("Invalid Double literal: \{num_str}")
-        }
-        (TokenKind::Double(value), num_str.length(), rest)
-      }
-    }
-  } else {
-    match rest {
-      ['L', .. rest] => {
-        let value = @strconv.parse_int64(num_str) catch {
-          _ => raise TokenizeError("Invalid Int64 literal: \{num_str}")
-        }
-        (TokenKind::Int64(value), num_str.length() + 1, rest)
-      }
-      _ => {
-        let value = @strconv.parse_int(num_str) catch {
-          _ => raise TokenizeError("Invalid Int literal: \{num_str}")
-        }
-        (TokenKind::Int(value), num_str.length(), rest)
-      }
-    }
-  }
-  (kind, len, rest)
 }
 
 ///|

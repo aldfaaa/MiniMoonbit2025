@@ -216,6 +216,22 @@ test "Tokenize Int Number" {
 }
 
 ///|
+test "Tokenize Hexadecimal Number" {
+  let code =
+    #|0x1a 0xFF 0x0 0x7FFFFFFF 0XABCD 0x10L 0xDeadBeefL
+  let tokens = tokenize(code)
+  assert_true(tokens.length() is 8)
+  assert_true(tokens[0].kind is Int(26))           // 0x1a = 26
+  assert_true(tokens[1].kind is Int(255))          // 0xFF = 255
+  assert_true(tokens[2].kind is Int(0))            // 0x0 = 0
+  assert_true(tokens[3].kind is Int(2147483647))   // 0x7FFFFFFF = max Int
+  assert_true(tokens[4].kind is Int(43981))        // 0XABCD = 43981
+  assert_true(tokens[5].kind is Int64(16L))        // 0x10L = 16L
+  assert_true(tokens[6].kind is Int64(3735928559L)) // 0xDeadBeefL = 3735928559L
+  assert_true(tokens[7].kind is EOF)
+}
+
+///|
 test "Tokenize Keyword" {
   let code =
     #|fn let mut if else struct return _
