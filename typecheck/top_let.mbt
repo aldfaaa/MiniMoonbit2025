@@ -79,6 +79,8 @@ test "TopLet to_string Test - Simple" {
       #|top let: pi
       #|├-type: Double
       #|└-expr: double literal 3.14 (Double)
+      #|
+
     ),
   )
 }
@@ -100,6 +102,8 @@ test "TopLet to_string Test - With Type" {
       #|top let: count
       #|├-type: Int
       #|└-expr: int literal 42 (Int)
+      #|
+
     ),
   )
 }

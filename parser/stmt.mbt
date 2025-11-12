@@ -317,10 +317,10 @@ test "Stmt to_string Test - Expr and Return" {
   inspect(
     output,
     content=(
-      #|expr statement
-      #|└-function call
-      #|  ├-variable foo
-      #|  └-int literal 42
+      #|function call
+      #|├-variable foo
+      #|└-int literal 42
+
     ),
   )
 
@@ -355,10 +355,10 @@ test "Stmt to_string Test - Complex Expr" {
   inspect(
     stmt.to_string(color~),
     content=(
-      #|expr statement
-      #|└-array access
-      #|  ├-variable arr
-      #|  └-int literal 0
+      #|array access
+      #|├-variable arr
+      #|└-int literal 0
+
     ),
   )
 
@@ -368,10 +368,10 @@ test "Stmt to_string Test - Complex Expr" {
   inspect(
     stmt.to_string(color~),
     content=(
-      #|expr statement
-      #|└-field access .y
-      #|  └-field access .x
-      #|    └-variable point
+      #|field access .y
+      #|└-field access .x
+      #|  └-variable point
+
     ),
   )
 
@@ -381,12 +381,12 @@ test "Stmt to_string Test - Complex Expr" {
   inspect(
     stmt.to_string(color~),
     content=(
-      #|expr statement
-      #|└-function call
-      #|  ├-variable add
-      #|  ├-int literal 1
-      #|  ├-int literal 2
-      #|  └-int literal 3
+      #|function call
+      #|├-variable add
+      #|├-int literal 1
+      #|├-int literal 2
+      #|└-int literal 3
+
     ),
   )
 }

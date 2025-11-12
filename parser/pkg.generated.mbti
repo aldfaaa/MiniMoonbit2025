@@ -319,6 +319,7 @@ impl Show for Pattern
 
 pub(all) enum PatternKind {
   Wildcard
+  Boolean(Bool)
   Integer(Int)
   Ident(String)
   Tuple(Array[Pattern])

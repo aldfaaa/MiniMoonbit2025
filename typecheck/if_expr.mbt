@@ -145,9 +145,9 @@ test "IfExpr to_string Test - Simple" {
       #|if expression (Int)
       #|├-cond: variable x (Bool)
       #|└-then: block (Int)
-      #|        └-expr statement
-      #|          └-int literal 1 (Int)
+      #|        └-int literal 1 (Int)
       #|        
+
     ),
   )
 }
@@ -172,13 +172,12 @@ test "IfExpr to_string Test - With Else" {
       #|│       ├-variable x (Int)
       #|│       └-int literal 0 (Int)
       #|├-then: block (Int)
-      #|│       └-expr statement
-      #|│         └-int literal 1 (Int)
+      #|│       └-int literal 1 (Int)
       #|│       
       #|└-else: block (Int)
-      #|        └-expr statement
-      #|          └-int literal 0 (Int)
+      #|        └-int literal 0 (Int)
       #|        
+
     ),
   )
 }
@@ -203,21 +202,19 @@ test "IfExpr to_string Test - Else If" {
       #|│       ├-variable x (Int)
       #|│       └-int literal 0 (Int)
       #|├-then: block (Int)
-      #|│       └-expr statement
-      #|│         └-int literal 1 (Int)
+      #|│       └-int literal 1 (Int)
       #|│       
       #|└-else: if expression (Int)
       #|        ├-cond: binary expr: < (Bool)
       #|        │       ├-variable x (Int)
       #|        │       └-int literal 0 (Int)
       #|        ├-then: block (Int)
-      #|        │       └-expr statement
-      #|        │         └-int literal 2 (Int)
+      #|        │       └-int literal 2 (Int)
       #|        │       
       #|        └-else: block (Int)
-      #|                └-expr statement
-      #|                  └-int literal 0 (Int)
+      #|                └-int literal 0 (Int)
       #|                
+
     ),
   )
 }

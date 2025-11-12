@@ -167,15 +167,15 @@ test "BlockExpr to_string Test - Complex" {
       #|├-let statement
       #|│ ├-pattern: ident pattern x
       #|│ └-expr: int literal 42
-      #|├-expr statement
-      #|│ └-function call
-      #|│   ├-variable foo
-      #|│   └-variable x
+      #|├-function call
+      #|│ ├-variable foo
+      #|│ └-variable x
       #|└-return statement
       #|  └-binary expr: *
       #|    ├-variable x
       #|    └-int literal 2
       #|
+
     ),
   )
 }

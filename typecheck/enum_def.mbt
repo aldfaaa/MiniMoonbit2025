@@ -111,7 +111,10 @@ test "EnumDef to_string Test - Simple" {
     content=(
       #|enum: Option
       #|├-Some(Int)
+      #|
       #|└-None
+      #|
+
     ),
   )
 }
@@ -132,7 +135,10 @@ test "EnumDef to_string Test - Multiple Types" {
     content=(
       #|enum: Result
       #|├-Ok(Int, String)
+      #|
       #|└-Err(String)
+      #|
+
     ),
   )
 }

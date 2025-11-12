@@ -113,6 +113,9 @@ test "ExternFunction to_string Test - Simple" {
       #|│ └-x: Double
       #|├-return: Double
       #|└-ffi: "sqrt"
+      #|
+      #|
+
     ),
   )
 }
@@ -138,6 +141,9 @@ test "ExternFunction to_string Test - Multiple Params" {
       #|│ └-y: Double
       #|├-return: Double
       #|└-ffi: "pow"
+      #|
+      #|
+
     ),
   )
 }

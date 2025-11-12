@@ -195,10 +195,10 @@ test "Stmt to_string Test - Expr and Return" {
   inspect(
     checked.to_string(color~),
     content=(
-      #|expr statement
-      #|└-function call (Unit)
-      #|  ├-variable foo ((Int) -> Unit)
-      #|  └-int literal 42 (Int)
+      #|function call (Unit)
+      #|├-variable foo ((Int) -> Unit)
+      #|└-int literal 42 (Int)
+
     ),
   )
 

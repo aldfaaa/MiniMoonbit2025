@@ -106,6 +106,8 @@ test "StructDef to_string Test - Simple" {
       #|struct: Point
       #|├-x: Int
       #|└-y: Int
+      #|
+
     ),
   )
 }
@@ -127,6 +129,8 @@ test "StructDef to_string Test - With Mut" {
       #|struct: Counter
       #|├-mut count: Int
       #|└-name: String
+      #|
+
     ),
   )
 }

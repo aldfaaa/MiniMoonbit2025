@@ -468,13 +468,12 @@ test "Expr to_string Test - IfExpr" {
       #|│       ├-variable x (Int)
       #|│       └-int literal 0 (Int)
       #|├-then: block (Int)
-      #|│       └-expr statement
-      #|│         └-int literal 1 (Int)
+      #|│       └-int literal 1 (Int)
       #|│       
       #|└-else: block (Int)
-      #|        └-expr statement
-      #|          └-int literal 0 (Int)
+      #|        └-int literal 0 (Int)
       #|        
+
     ),
   )
 }

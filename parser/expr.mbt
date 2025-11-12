@@ -604,11 +604,11 @@ test "Expr to_string Test - Block" {
       #|├-let statement
       #|│ ├-pattern: ident pattern x
       #|│ └-expr: int literal 42
-      #|└-expr statement
-      #|  └-binary expr: +
-      #|    ├-variable x
-      #|    └-int literal 1
+      #|└-binary expr: +
+      #|  ├-variable x
+      #|  └-int literal 1
       #|
+
     ),
   )
 

@@ -56,7 +56,7 @@ pub struct MatchArm {
   pattern : Pattern
   match_guard : Expr?
   body : Expr
-  toks: ArrayView[Token]
+  toks : ArrayView[Token]
 }
 
 ///|
@@ -126,6 +126,7 @@ pub fn MatchArm::to_string(self : Self, color? : Bool = true) -> String {
   }
 }
 
+///|
 pub fn Context::check_match_expr(
   self : Context,
   match_expr : @parser.MatchExpr,
@@ -135,15 +136,13 @@ pub fn Context::check_match_expr(
 
   // Step 2. Exhaustiveness Check
   checked_match_expr.check_match_exhaustiveness(self) catch {
-    err => {
+    err =>
       self.throw_(
         match_expr.cond.toks[0],
         "Match expression exhaustiveness check failed: \{err}",
         Error,
       )
-    }
   }
-
   checked_match_expr
 }
 
@@ -229,8 +228,9 @@ pub fn Context::check_match_expr_type(
   MatchExpr::{ cond: checked_cond, arms: checked_arms, ty: tykind }
 }
 
+///|
 pub(all) enum PatternSet {
-  Empty 
+  Empty
   Single(PatternKind)
   // Only Integer `Int` (Not Support UInt, UInt64, Int64 for now)
   // Integer Complement, e.g. NumberComplement{1, 3, 5}
@@ -243,45 +243,53 @@ pub(all) enum PatternSet {
   TupleConstructor(Array[PatternSet])
 } derive(Show, Eq)
 
-fn Context::full_pattern_set_of_type(self: Self, ty: TypeKind) -> PatternSet raise TypeCheckError {
+///|
+fn Context::full_pattern_set_of_type(
+  self : Self,
+  ty : TypeKind,
+) -> PatternSet raise TypeCheckError {
   match ty {
     Int => NumberComplement([])
-    Bool => {
-      Union([
-        Single(Boolean(true)),
-        Single(Boolean(false)),
-      ])
-    }
-    Enum(enum_name) => {
+    Bool => Union([Single(Boolean(true)), Single(Boolean(false))])
+    Enum(enum_name) =>
       match self.enum_defs.get(enum_name) {
         Some(enum_def) => {
           let variants = Array::new()
           for field in enum_def.enum_fields {
             let { name, types } = field
-            let sub_pattern_sets = types.map(t => self.full_pattern_set_of_type(t))
+            let sub_pattern_sets = types.map(t => self.full_pattern_set_of_type(
+              t,
+            ))
             variants.push(EnumConstructor(enum_name, name, sub_pattern_sets))
           }
           Union(variants)
         }
-        None => raise TypeCheckError(
-          "Cannot get full pattern set for Unknown enum type: \{enum_name} during pattern exhaustiveness check"
-        )
+        None =>
+          raise TypeCheckError(
+            "Cannot get full pattern set for Unknown enum type: \{enum_name} during pattern exhaustiveness check",
+          )
       }
-    }
     Tuple(elem_types) => {
-      let sub_pattern_sets = elem_types.map(t => self.full_pattern_set_of_type(t))
+      let sub_pattern_sets = elem_types.map(t => self.full_pattern_set_of_type(
+        t,
+      ))
       TupleConstructor(sub_pattern_sets)
     }
-    _ => raise TypeCheckError(
-      "Cannot get full pattern set for type: \{ty} during pattern exhaustiveness check"
-    ) 
+    _ =>
+      raise TypeCheckError(
+        "Cannot get full pattern set for type: \{ty} during pattern exhaustiveness check",
+      )
   }
 }
 
-fn PatternSet::subtract(self: Self, pat: PatternKind) -> PatternSet raise TypeCheckError {
+///|
+fn PatternSet::subtract(
+  self : Self,
+  pat : PatternKind,
+) -> PatternSet raise TypeCheckError {
   match (self, pat) {
     (Empty, _) => Empty
-    (_, Wildcard|Ident(_)) => Empty
+    (_, Wildcard | Ident(_)) => Empty
     (Single(pk), pat) if pk == pat => Empty
     (Single(_), _) => self
     (NumberComplement(excluded), Integer(n)) => {
@@ -308,15 +316,16 @@ fn PatternSet::subtract(self: Self, pat: PatternKind) -> PatternSet raise TypeCh
           continue
         }
         new_subsets.push(subs)
-        for j in (i+1)..<subsets.length() {
+        for j in (i + 1)..<subsets.length() {
           new_subsets.push(subsets[j])
         }
         unioned_sets.push(TupleConstructor(new_subsets))
       }
       Union(unioned_sets)
     }
-    (EnumConstructor(tag, name, subsets), EnumVariant(tag2, name2, pats)) if
-    tag == tag2 && name == name2 => {
+    (EnumConstructor(tag, name, subsets), EnumVariant(tag2, name2, pats)) if tag ==
+      tag2 &&
+      name == name2 => {
       let unioned_sets = Array::new()
       for i in 0..<subsets.length() {
         let new_subsets = Array::new()
@@ -328,13 +337,15 @@ fn PatternSet::subtract(self: Self, pat: PatternKind) -> PatternSet raise TypeCh
           continue
         }
         new_subsets.push(subs)
-        for j in (i+1)..<subsets.length() {
+        for j in (i + 1)..<subsets.length() {
           new_subsets.push(subsets[j])
         }
         unioned_sets.push(EnumConstructor(tag, name, new_subsets))
       }
       Union(unioned_sets)
     }
+    // If enum constructor and variant have different names, they don't overlap
+    (EnumConstructor(_, _, _), EnumVariant(_, _, _)) => self
     (Union(sets), pat) => {
       let new_sets = Array::new()
       for s in sets {
@@ -350,13 +361,18 @@ fn PatternSet::subtract(self: Self, pat: PatternKind) -> PatternSet raise TypeCh
         _ => Union(new_sets)
       }
     }
-    _ => raise TypeCheckError(
-      "TypeMismatch during pattern set subtraction: cannot subtract \{pat} from \{self}"
-    )
+    _ =>
+      raise TypeCheckError(
+        "TypeMismatch during pattern set subtraction: cannot subtract \{pat} from \{self}",
+      )
   }
 }
 
-fn MatchExpr::check_match_exhaustiveness(self: Self, ctx: Context) -> Unit raise TypeCheckError {
+///|
+fn MatchExpr::check_match_exhaustiveness(
+  self : Self,
+  ctx : Context,
+) -> Unit raise TypeCheckError {
   let ty = ctx.ensure_type(self.cond.ty)
   let full_set = ctx.full_pattern_set_of_type(ty)
   let mut remaining_set = full_set
@@ -365,9 +381,10 @@ fn MatchExpr::check_match_exhaustiveness(self: Self, ctx: Context) -> Unit raise
   }
   match remaining_set {
     Empty => ()
-    _ => raise TypeCheckError(
-      "Non-exhaustive match expression: some patterns are not covered: \{remaining_set}"
-    )
+    _ =>
+      raise TypeCheckError(
+        "Non-exhaustive match expression: some patterns are not covered: \{remaining_set}",
+      )
   }
 }
 
@@ -440,7 +457,7 @@ test "MatchExpr to_string Test - Tuple Pattern" {
     mutable: false,
   })
   let code =
-    #|match pair { (a, b) => a + b }
+    #|match pair { (a, b) => a + b; _ => 0 }
   let tokens = @lexer.tokenize(code)
 
   // Test match with tuple pattern
@@ -451,13 +468,16 @@ test "MatchExpr to_string Test - Tuple Pattern" {
     content=(
       #|match expression (Int)
       #|├-cond: variable pair ((Int, Int))
+      #|├-match arm
+      #|│ ├-pattern: tuple pattern
+      #|│ │          ├-ident pattern a
+      #|│ │          └-ident pattern b
+      #|│ └-body: binary expr: + (Int)
+      #|│         ├-variable a (Int)
+      #|│         └-variable b (Int)
       #|└-match arm
-      #|  ├-pattern: tuple pattern
-      #|  │          ├-ident pattern a
-      #|  │          └-ident pattern b
-      #|  └-body: binary expr: + (Int)
-      #|          ├-variable a (Int)
-      #|          └-variable b (Int)
+      #|  ├-pattern: _
+      #|  └-body: int literal 0 (Int)
     ),
   )
 }
