@@ -50,6 +50,7 @@ fn Context::assign_stmt_to_knf(Self, @typecheck.AssignStmt) -> Array[KnfStmt] ra
 fn Context::atom_expr_to_knf(Self, @typecheck.AtomExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
 fn Context::block_expr_to_knf(Self, @typecheck.BlockExpr) -> KnfBlock raise KnfTransformError
 fn Context::enter_scope(Self) -> Unit
+fn Context::enum_to_knf(Self, @typecheck.EnumDef) -> KnfUnion raise KnfTransformError
 fn Context::exit_scope(Self) -> Unit
 fn Context::expr_to_knf(Self, @typecheck.Expr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
 fn Context::extern_to_knf(Self, @typecheck.ExternFunction) -> KnfExtern raise KnfTransformError
@@ -60,7 +61,11 @@ fn Context::let_mut_stmt_to_knf(Self, @typecheck.LetMutStmt) -> Array[KnfStmt] r
 fn Context::let_stmt_to_knf(Self, @typecheck.LetStmt) -> Array[KnfStmt] raise KnfTransformError
 fn Context::local_function_to_knf(Self, @typecheck.LocalFunction) -> KnfClosure raise KnfTransformError
 fn Context::lookup_name(Self, String) -> (Name, Type)?
+fn Context::match_bool_expr_to_knf(Self, @typecheck.MatchExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::match_enum_expr_to_knf(Self, @typecheck.MatchExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
 fn Context::match_expr_to_knf(Self, @typecheck.MatchExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::match_int_expr_to_knf(Self, @typecheck.MatchExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
+fn Context::match_tuple_expr_to_knf(Self, @typecheck.MatchExpr) -> (Array[KnfStmt], KnfExpr) raise KnfTransformError
 fn Context::new() -> Self
 fn Context::program_to_knf(Self, @typecheck.Program) -> KnfProgram raise KnfTransformError
 fn Context::stmt_to_knf(Self, @typecheck.Stmt) -> Array[KnfStmt] raise KnfTransformError
@@ -126,6 +131,9 @@ pub(all) enum KnfExpr {
   TupleLiteral(Array[Name])
   Cast(Type, Name)
   BitCast(Type, Name)
+  GetUnionTag(Name)
+  ReInterpretUnion(String, Name)
+  Switch(Name, Array[(Int, KnfBlock)], KnfBlock)
 }
 fn KnfExpr::to_string(Self, ident? : Int) -> String
 impl Show for KnfExpr
@@ -190,6 +198,11 @@ pub(all) struct KnfTopLet {
   expr : KnfExpr
 }
 impl Show for KnfTopLet
+
+pub(all) struct KnfUnion {
+  name : String
+  variants : Array[KnfStructDef]
+}
 
 pub(all) struct Name {
   id : String

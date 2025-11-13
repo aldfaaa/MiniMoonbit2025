@@ -71,7 +71,8 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
     Cast(ty, name) => "cast<\{ty}>(\{name})"
     BitCast(ty, name) => "bitcast<\{ty}>(\{name})"
     GetUnionTag(name) => "get_union_tag(\{name})"
-    ReInterpretUnion(variant_name, name) => "reinterpret_union<\{variant_name}>(\{name})"
+    ReInterpretUnion(variant_name, name) =>
+      "reinterpret_union<\{variant_name}>(\{name})"
     Block(block) => block.to_string(ident)
     If(cond, then_block, else_block) => {
       let cond_str = cond.to_string()
@@ -87,7 +88,7 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
       let indent_str = " ".repeat(ident + 2)
       let closing_indent = " ".repeat(ident)
       let mut result = "switch (\{expr_name}) {\n"
-      
+
       // 生成每个 case
       for case in cases {
         let (case_value, case_block) = case
@@ -97,14 +98,13 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
         }
         result = "\{result}\{indent_str}}\n"
       }
-      
+
       // 生成 default
       result = "\{result}\{indent_str}default: {\n"
       for stmt in default_block.stmts {
         result = "\{result}\{stmt.to_string(ident=ident + 4)}\n"
       }
       result = "\{result}\{indent_str}}\n"
-      
       result = "\{result}\{closing_indent}}"
       result
     }

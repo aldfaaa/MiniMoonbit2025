@@ -1,4 +1,3 @@
-
 ///|
 test "Apply Expr Knf Transformation Test" {
   // Prelude Parts

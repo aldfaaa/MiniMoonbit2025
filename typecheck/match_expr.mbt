@@ -136,12 +136,7 @@ pub fn Context::check_match_expr(
 
   // Step 2. Exhaustiveness Check
   checked_match_expr.check_match_exhaustiveness(self) catch {
-    TypeCheckError(err) =>
-      self.throw_(
-        match_expr.cond.toks[0],
-        "\{err}",
-        Error,
-      )
+    TypeCheckError(err) => self.throw_(match_expr.cond.toks[0], "\{err}", Error)
   }
   checked_match_expr
 }
@@ -315,7 +310,6 @@ fn PatternSet::subtract(
           _ => ()
         }
       }
-      
       let unioned_sets = Array::new()
       for i in 0..<subsets.length() {
         let new_subsets = Array::new()
@@ -351,7 +345,6 @@ fn PatternSet::subtract(
           _ => ()
         }
       }
-      
       let unioned_sets = Array::new()
       for i in 0..<subsets.length() {
         let new_subsets = Array::new()
@@ -411,7 +404,7 @@ fn PatternSet::to_pattern_hints(self : Self) -> Array[String] {
       }
       hints
     }
-    EnumConstructor(_, name, subsets) => {
+    EnumConstructor(_, name, subsets) =>
       if subsets.length() == 0 {
         [name]
       } else {
@@ -420,7 +413,6 @@ fn PatternSet::to_pattern_hints(self : Self) -> Array[String] {
         generate_enum_patterns(name, sub_hints, 0, [], patterns)
         patterns
       }
-    }
     TupleConstructor(subsets) => {
       let sub_hints = subsets.map(s => s.to_pattern_hints())
       let patterns = []
@@ -430,6 +422,7 @@ fn PatternSet::to_pattern_hints(self : Self) -> Array[String] {
   }
 }
 
+///|
 fn join_strings(arr : Array[String], sep : String) -> String {
   if arr.length() == 0 {
     return ""
@@ -441,12 +434,13 @@ fn join_strings(arr : Array[String], sep : String) -> String {
   result
 }
 
+///|
 fn generate_enum_patterns(
   name : String,
   sub_hints : Array[Array[String]],
   index : Int,
   current : Array[String],
-  result : Array[String]
+  result : Array[String],
 ) -> Unit {
   if index == sub_hints.length() {
     let joined = join_strings(current, ", ")
@@ -461,11 +455,12 @@ fn generate_enum_patterns(
   }
 }
 
+///|
 fn generate_tuple_patterns(
   sub_hints : Array[Array[String]],
   index : Int,
   current : Array[String],
-  result : Array[String]
+  result : Array[String],
 ) -> Unit {
   if index == sub_hints.length() {
     let joined = join_strings(current, ", ")

@@ -149,6 +149,7 @@ pub(all) enum PatternKind {
   EnumVariant(String, String, Array[Pattern])
 } derive(Eq)
 
+///|
 pub impl Show for PatternKind with output(self, logger) {
   let s = match self {
     Wildcard => "_"

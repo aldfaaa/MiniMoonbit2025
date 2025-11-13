@@ -1,7 +1,7 @@
-
+///|
 pub(all) struct KnfUnion {
-  name: String
-  variants: Array[KnfStructDef]
+  name : String
+  variants : Array[KnfStructDef]
 }
 
 ///|
@@ -35,11 +35,11 @@ pub(all) struct KnfUnion {
 /// }
 /// ```
 pub fn Context::enum_to_knf(
-  self: Context,
-  enum_def: @typecheck.EnumDef,
+  self : Context,
+  enum_def : @typecheck.EnumDef,
 ) -> KnfUnion raise KnfTransformError {
   let { name: union_name, enum_fields } = enum_def
-  let knf_variants: Array[KnfStructDef] = Array::new()
+  let knf_variants : Array[KnfStructDef] = Array::new()
   for enum_field in enum_fields {
     let { name, types } = enum_field
     let fields : Array[(String, Bool, Type)] = Array::new()
