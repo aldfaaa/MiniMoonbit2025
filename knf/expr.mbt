@@ -26,6 +26,9 @@ pub(all) enum KnfExpr {
   TupleLiteral(Array[Name])
   Cast(Type, Name)
   BitCast(Type, Name)
+  GetUnionTag(Name)
+  ReInterpretUnion(String, Name) // String is union variant name
+  Switch(Name, Array[(Int, KnfBlock)], KnfBlock) // switch expr, cases, default
 }
 
 ///|
@@ -67,6 +70,8 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
     }
     Cast(ty, name) => "cast<\{ty}>(\{name})"
     BitCast(ty, name) => "bitcast<\{ty}>(\{name})"
+    GetUnionTag(name) => "get_union_tag(\{name})"
+    ReInterpretUnion(variant_name, name) => "reinterpret_union<\{variant_name}>(\{name})"
     Block(block) => block.to_string(ident)
     If(cond, then_block, else_block) => {
       let cond_str = cond.to_string()
@@ -77,6 +82,22 @@ pub fn KnfExpr::to_string(self : KnfExpr, ident? : Int = 0) -> String {
         let else_str : String = else_block.to_string(ident)
         "if \{cond_str} \{then_str} else \{else_str}"
       }
+    }
+    Switch(expr_name, cases, default_block) => {
+      let mut result = "switch (\{expr_name}) {\n"
+      for case in cases {
+        let (case_value, case_block) = case
+        let case_str = case_block.to_string(ident + 1)
+        result = "\{result}\\{ "  // indent
+        result = "\{result}case \{case_value}:\n"
+        result = "\{result}\{case_str}\n"
+      }
+      let default_str = default_block.to_string(ident + 1)
+      result = "\{result}\\{ "  // indent
+      result = "\{result}default:\n"
+      result = "\{result}\{default_str}\n"
+      result = "\{result}}\n"
+      result
     }
   }
 }
