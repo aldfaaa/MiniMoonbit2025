@@ -1,7 +1,6 @@
 {
   "import": [
     "Kaida-Amethyst/MiniMoonBit/typecheck",
-    "Kaida-Amethyst/MiniMoonBit/color",
     "Kaida-Amethyst/either",
   ],
   "test-import" : [

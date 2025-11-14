@@ -776,10 +776,21 @@ pub fn Context::match_tuple_expr_to_knf(
 
     // Build then block
     let (body_stmts, body_expr) = self.expr_to_knf(body)
-    let then_block_stmts = Array::new()
-    then_block_stmts.append(body_stmts)
-    then_block_stmts.push(ExprStmt(body_expr))
-    let then_block = KnfBlock::{ stmts: then_block_stmts, ty: match_expr_ty }
+    let then_block = match (body_stmts, body_expr) {
+      ([], Block(block)) => block
+      (_, Block(block)) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.append(block.stmts)
+        KnfBlock::{ stmts, ty: match_expr_ty }
+      }
+      (_, expr) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.push(ExprStmt(expr))
+        KnfBlock::{ stmts, ty: match_expr_ty }
+      }
+    }
     let else_block = last_else_block
     match (is_last_branch, cond_expr_opt, guard_cond_opt) {
       // Last branch (catch-all)
@@ -928,10 +939,68 @@ fn Context::build_tuple_pattern_condition(
             }
             bindings.append(nested_bindings)
           }
-          _ =>
-            raise KnfTransformError(
-              "Unsupported pattern kind in tuple match: \{sub_pat.kind}",
+          EnumVariant(_enum_tag, variant_name, sub_patterns) => {
+            // Nested enum pattern in tuple
+            guard elem_ty is Union(enum_name) else {
+              raise KnfTransformError(
+                "Type mismatch: expected Union type for nested enum pattern in tuple",
+              )
+            }
+
+            // Get the tag of the nested enum value
+            let nested_tag_name = self.add_temp(Type::Int)
+            stmts.push(Let(nested_tag_name, Type::Int, GetUnionTag(elem_name)))
+
+            // Find the variant index
+            guard self.unions.get(enum_name) is Some(variant_names) else {
+              raise KnfTransformError("Enum \{enum_name} not found in unions")
+            }
+            let nested_variant_full_name = "\{enum_name}$\{variant_name}"
+            let variant_index = match
+              variant_names.search_by(fn(v) { v == nested_variant_full_name }) {
+              Some(idx) => idx
+              None =>
+                raise KnfTransformError(
+                  "Variant \{variant_name} not found in enum \{enum_name}",
+                )
+            }
+
+            // Check if tag matches
+            let expected_tag_name = self.add_temp(Type::Int)
+            stmts.push(
+              Let(expected_tag_name, Type::Int, KnfExpr::Int(variant_index)),
             )
+            let tag_cond_name = self.add_temp(Type::Bool)
+            stmts.push(
+              Let(
+                tag_cond_name,
+                Type::Bool,
+                Binary(Eq, nested_tag_name, expected_tag_name),
+              ),
+            )
+            conditions.push(tag_cond_name)
+
+            // Reinterpret as specific variant and process nested patterns
+            let nested_variant_struct_name = self.add_temp(
+              Struct(nested_variant_full_name),
+            )
+            stmts.push(
+              Let(
+                nested_variant_struct_name,
+                Struct(nested_variant_full_name),
+                ReInterpretUnion(nested_variant_full_name, elem_name),
+              ),
+            )
+
+            // Recursively process nested enum patterns
+            let (nested_cond_opt, nested_bindings) = self.build_enum_pattern_condition(
+              sub_patterns, nested_variant_struct_name, nested_variant_full_name,
+            )
+            if nested_cond_opt is Some(cond) {
+              conditions.push(cond)
+            }
+            bindings.append(nested_bindings)
+          }
         }
       }
 
