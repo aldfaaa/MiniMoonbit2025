@@ -208,10 +208,21 @@ fn Context::build_int_case_block(
   for arm in arms.rev_iter() {
     self.enter_scope()
     let (body_stmts, body_expr) = self.expr_to_knf(arm.body)
-    let then_block_stmts = Array::new()
-    then_block_stmts.append(body_stmts)
-    then_block_stmts.push(ExprStmt(body_expr))
-    let then_block = KnfBlock::{ stmts: then_block_stmts, ty: result_ty }
+    let then_block = match (body_stmts, body_expr) {
+      ([], Block(block)) => block
+      (_, Block(block)) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.append(block.stmts)
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+      (_, expr) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.push(ExprStmt(expr))
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+    }
     if arm.match_guard is Some(guard_expr) {
       let (guard_stmts, guard_knf) = self.expr_to_knf(guard_expr)
       let guard_name = self.expr_to_knf_name(guard_knf, Bool, guard_stmts)
@@ -266,10 +277,21 @@ fn Context::build_default_arms_block(
     }
     let (body_stmts, body_expr) = self.expr_to_knf(arm.body)
     self.exit_scope()
-    let then_block_stmts = Array::new()
-    then_block_stmts.append(body_stmts)
-    then_block_stmts.push(ExprStmt(body_expr))
-    let then_block = KnfBlock::{ stmts: then_block_stmts, ty: result_ty }
+    let then_block = match (body_stmts, body_expr) {
+      ([], Block(block)) => block
+      (_, Block(block)) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.append(block.stmts)
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+      (_, expr) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.push(ExprStmt(expr))
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+    }
     let else_block = match current_else_block {
       Some(blk) => blk
       None => KnfBlock::{ stmts: [], ty: result_ty }
@@ -439,10 +461,24 @@ fn Context::build_enum_case_block(
 
     // Build then block (arm body)
     let (body_stmts, body_expr) = self.expr_to_knf(arm.body)
-    let then_block_stmts = Array::new()
-    then_block_stmts.append(body_stmts)
-    then_block_stmts.push(ExprStmt(body_expr))
-    let then_block = KnfBlock::{ stmts: then_block_stmts, ty: result_ty }
+    let then_block = match (body_stmts, body_expr) {
+      // If body is already a block and there are no preceding statements, use it directly
+      ([], Block(block)) => block
+      // If body is a block but has preceding statements, this is unusual but handle it
+      (_, Block(block)) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.append(block.stmts)
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+      // Normal case: wrap expression as statement
+      (_, expr) => {
+        let stmts = Array::new()
+        stmts.append(body_stmts)
+        stmts.push(ExprStmt(expr))
+        KnfBlock::{ stmts, ty: result_ty }
+      }
+    }
     let else_block = match current_else_block {
       Some(blk) => blk
       None => KnfBlock::{ stmts: [], ty: result_ty }
@@ -571,11 +607,12 @@ fn Context::build_enum_pattern_condition(
         let nested_elem_names : Array[Name] = []
         for j, nested_type in nested_types {
           let nested_name = self.add_temp(nested_type)
-          stmts.push(Let(nested_name, nested_type, TupleAccess(field_val_name, j)))
+          stmts.push(
+            Let(nested_name, nested_type, TupleAccess(field_val_name, j)),
+          )
           nested_elem_names.push(nested_name)
         }
-        let (nested_stmts, nested_cond_opt, nested_bindings) = 
-        self.build_tuple_pattern_condition(
+        let (nested_stmts, nested_cond_opt, nested_bindings) = self.build_tuple_pattern_condition(
           sub_pat, nested_elem_names, nested_types,
         )
         stmts.append(nested_stmts)
@@ -593,9 +630,7 @@ fn Context::build_enum_pattern_condition(
         }
         // Get the tag of the nested enum value
         let nested_tag_name = self.add_temp(Type::Int)
-        stmts.push(
-          Let(nested_tag_name, Type::Int, GetUnionTag(field_val_name)),
-        )
+        stmts.push(Let(nested_tag_name, Type::Int, GetUnionTag(field_val_name)))
 
         // Find the variant index
         guard self.unions.get(enum_name) is Some(variant_names) else {
