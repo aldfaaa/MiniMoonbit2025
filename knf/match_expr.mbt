@@ -565,10 +565,13 @@ fn Context::build_enum_pattern_condition(
         )
         conditions.push(cond_name)
       }
-      _ =>
+      _ => {
+        let pat_str = sub_pat.kind.to_string()
+        let pat_str = @color.strip_color(pat_str)
         raise KnfTransformError(
-          "Unsupported sub-pattern in enum match: \{sub_pat.kind}",
+          "Unsupported sub-pattern in enum match: \{pat_str}",
         )
+      }
     }
   }
 

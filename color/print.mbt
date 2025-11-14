@@ -35,12 +35,12 @@ pub fn taint(msg : String, color : Color) -> String {
 ///|
 pub fn strip_color(msg : String) -> String {
   msg
-  .replace(old="\u{1b}[31m", new="")
-  .replace(old="\u{1b}[32m", new="")
-  .replace(old="\u{1b}[33m", new="")
-  .replace(old="\u{1b}[34m", new="")
-  .replace(old="\u{1b}[35m", new="")
-  .replace(old="\u{1b}[0m", new="")
+  .replace_all(old="\u{1b}[31m", new="")
+  .replace_all(old="\u{1b}[32m", new="")
+  .replace_all(old="\u{1b}[33m", new="")
+  .replace_all(old="\u{1b}[34m", new="")
+  .replace_all(old="\u{1b}[35m", new="")
+  .replace_all(old="\u{1b}[0m", new="")
 }
 
 ///|

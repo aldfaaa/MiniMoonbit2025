@@ -305,7 +305,9 @@ fn PatternSet::subtract(
       // Note: Ident patterns match everything, so we don't check them
       for i in 0..<subsets.length() {
         match (subsets[i], pats[i].kind) {
-          (Single(Ident(_)), Ident(_)) => () // Both are idents, they match
+          // Wildcard or Ident matches everything
+          // this branch is for in case of `pat_kind` being Wildcard or Ident
+          (_, Wildcard | Ident(_)) => ()
           (Single(pk), pat_kind) if pk != pat_kind => return self
           _ => ()
         }
@@ -340,7 +342,9 @@ fn PatternSet::subtract(
       // Note: Ident patterns match everything, so we don't check them
       for i in 0..<subsets.length() {
         match (subsets[i], pats[i].kind) {
-          (Single(Ident(_)), Ident(_)) => () // Both are idents, they match
+          // Wildcard or Ident matches everything
+          // this branch is for in case of `pat_kind` being Wildcard or Ident
+          (_, Wildcard | Ident(_)) => ()
           (Single(pk), pat_kind) if pk != pat_kind => return self
           _ => ()
         }
