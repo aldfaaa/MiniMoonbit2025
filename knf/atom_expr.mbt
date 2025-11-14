@@ -95,9 +95,36 @@ pub fn Context::atom_expr_to_knf(
       let target_ty_knf = self.typekind_to_knf(target_ty)
       (stmts, KnfExpr::BitCast(target_ty_knf, expr_name))
     }
-    EnumConstruct(_) =>
-      raise KnfTransformError(
-        "Enum construction not supported in atom expressions",
-      )
+    EnumConstruct(tag, variant, exprs) => {
+      let struct_variant_name = "\{tag}$\{variant}"
+      // 1. find union type
+      guard self.unions.get(tag) is Some(variant_names) else {
+        raise KnfTransformError("Undefined enum tag: \{tag}")
+      }
+      // 2. find variant struct name, get index
+      guard variant_names.search_by(v => v == struct_variant_name) is Some(idx) else {
+        raise KnfTransformError("Undefined variant: \{variant} for enum tag: \{tag}")
+      }
+      let stmts : Array[KnfStmt] = Array::new()
+      let knf_names : Array[Name] = Array::new()
+      // first field is tag
+      let let_tag_name = self.add_temp(Int)
+      stmts.push(Let(let_tag_name, Int, Int(idx)))
+      for expr in exprs {
+        let (expr_stmts, expr_knf_expr) = self.expr_to_knf(expr)
+        stmts.append(expr_stmts)
+        let expr_ty = self.typekind_to_knf(expr.ty)
+        let expr_name = self.expr_to_knf_name(expr_knf_expr, expr_ty, stmts)
+        knf_names.push(expr_name)
+      }
+      let knf_fields : Array[(String, Name)] = Array::new()
+      knf_fields.push(("tag", let_tag_name))
+      for i in 0..<knf_names.length() {
+        knf_fields.push(("$\{i}", knf_names[i]))
+      }
+      // 3. build struct fields
+      // enum_struct fields: int $tag, type $0, type $1, ...
+      (stmts, CreateStruct(struct_variant_name, knf_fields))
+    }
   }
 }

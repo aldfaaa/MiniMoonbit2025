@@ -2,6 +2,7 @@
 pub(all) struct KnfProgram {
   source_file : String
   struct_defs : Map[String, KnfStructDef]
+  unions: Map[String, KnfUnion]
   global_stmts : Array[KnfStmt]
   top_lets : Map[String, KnfTopLet]
   functions : Map[String, KnfFunction]
@@ -36,24 +37,37 @@ pub fn Context::program_to_knf(
 ) -> KnfProgram raise KnfTransformError {
   let source_file = prog.source_file
   let struct_defs = Map::new()
+  let unions = Map::new()
   let top_lets = Map::new()
   let functions = Map::new()
   let externs = Map::new()
 
-  // First, register all struct definitions
+  // Step 1, process all enum definitions
+  for enum_name, enum_def in prog.enum_defs {
+    let knf_union = self.enum_to_knf(enum_def)
+    let union_variant_names = Array::new()
+    unions.set(enum_name, knf_union)
+    for variant in knf_union.variants {
+      struct_defs.set(variant.name, variant)
+      union_variant_names.push(variant.name)
+    }
+    self.unions.set(enum_name, union_variant_names)
+  }
+
+  // Step -2, register all struct definitions
   for sname, struct_def in prog.struct_defs {
     let knf_struct_def = self.struct_def_to_knf(struct_def)
     struct_defs.set(sname, knf_struct_def)
   }
 
-  // Second, regiter all extern functions
+  // Step - 3, regiter all extern functions
   for fname, extern_func in prog.extern_funcions {
     let knf_extern = self.extern_to_knf(extern_func)
     externs.set(knf_extern.name, knf_extern)
     self.globals.set(fname, Function(knf_extern.params, knf_extern.ret_ty))
   }
 
-  // Third, register all function signatures in globals
+  // Step - 4, register all function signatures in globals
   // so that top_let expressions can reference them
   for _, func in prog.top_functions {
     let param_types = func.param_list.map(fn(p) { self.typekind_to_knf(p.ty) })
@@ -62,13 +76,13 @@ pub fn Context::program_to_knf(
     self.globals.set(func.fname, Function(param_types, ret_ty))
   }
 
-  // Fourth, process top-level let declarations
+  // Step - 5, process top-level let declarations
   for let_name, top_let in prog.top_lets {
     let knf_top_let = self.top_let_to_knf(top_let)
     top_lets.set(let_name, knf_top_let)
   }
 
-  // Finally, process function bodies
+  // Step - 6, process function bodies
   for _, func in prog.top_functions {
     let knf_func = self.top_function_to_knf(func)
     // Use func.fname which is the mangled name (e.g., Vec2$$new)
@@ -78,6 +92,7 @@ pub fn Context::program_to_knf(
   KnfProgram::{
     source_file,
     struct_defs,
+    unions,
     externs,
     top_lets,
     global_stmts,

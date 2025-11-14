@@ -17,6 +17,7 @@ pub fn Context::type_codegen_opaque(
     String(_) => self.llvm_ctx.getPtrTy()
     Tuple(_) => self.llvm_ctx.getPtrTy()
     Struct(_) => self.llvm_ctx.getPtrTy()
+    Union(_) => self.llvm_ctx.getPtrTy()
     Function(_) => self.llvm_ctx.getPtrTy()
   }
 }
@@ -45,6 +46,7 @@ pub fn Context::type_codegen_concrete(
       self.llvm_ctx.getStructType(llvm_elem_types)
     }
     Struct(struct_name) => self.struct_types.get(struct_name).unwrap()
+    Union(_) => self.llvm_ctx.getPtrTy()
     Function(param_types, return_type) => {
       let llvm_param_types = param_types.map(param_type => self.type_codegen_concrete(
         param_type,

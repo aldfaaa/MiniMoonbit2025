@@ -12,6 +12,7 @@ pub(all) enum Type {
   String
   Array(Type)
   Struct(String)
+  Union(String)
   Tuple(Array[Type])
   Function(Array[Type], Type)
 }
@@ -31,6 +32,7 @@ pub impl Show for Type with output(self, logger) {
     String => "String"
     Array(elem_type) => "Array[\{elem_type}]"
     Struct(name) => "\{name}"
+    Union(name) => "\{name}"
     Tuple(elem_types) => {
       let elem_strs = elem_types.map(et => "\{et}").join(", ")
       "(\{elem_strs})"
@@ -61,6 +63,7 @@ pub fn Context::typekind_to_knf(
     String => String
     Array(elem_tk) => Array(self.typekind_to_knf(elem_tk))
     Struct(name) => Struct(name)
+    Enum(name) => Union(name)
     Tuple(elem_tks) => {
       let elem_types = elem_tks.map(etk => self.typekind_to_knf(etk))
       Tuple(elem_types)
@@ -71,10 +74,8 @@ pub fn Context::typekind_to_knf(
       Function(param_types, ret_type)
     }
     Any => Unit
-    tk =>
-      raise KnfTransformError(
-        "Unsupported TypeKind '\{tk}' for KNF transformation",
-      )
+    TypeVar(_) =>
+      raise KnfTransformError("Unexpected TypeVar in KNF transformation: loc: typekind_to_knf")
   }
 }
 
