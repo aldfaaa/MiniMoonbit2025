@@ -11,7 +11,7 @@ fn main {
       println("Matched Some((1, 2))")
     }
     Some((x, y)) => {
-      println("Matched Some((\{x}, \{y}))")
+      println("Matched Some((x, y))")
     }
     None => {
       println("Matched None")

@@ -520,43 +520,40 @@ fn Context::build_enum_pattern_condition(
           "Field \{field_name} not found in struct \{variant_full_name}",
         )
     }
+
+    // Skip Wildcard patterns
+    if sub_pat.kind is Wildcard {
+      continue
+    }
+
+    // Extract field value for all other patterns
+    let field_val_name = self.add_temp(field_ty)
+    stmts.push(
+      Let(
+        field_val_name,
+        field_ty,
+        FieldAccess(variant_struct_name, field_name),
+      ),
+    )
     match sub_pat.kind {
-      Wildcard => continue // No condition or binding
+      Wildcard => () // Already handled above, unreachable
       Ident(var_name) => {
         // Bind variable to the field
         let new_name = self.add_new_name(var_name, field_ty)
-        bindings.push(
-          Let(new_name, field_ty, FieldAccess(variant_struct_name, field_name)),
-        )
+        bindings.push(Let(new_name, field_ty, Ident(field_val_name)))
       }
       Boolean(b) => {
-        // Extract field and check equality
-        let field_val_name = self.add_temp(field_ty)
+        // Check equality
+        let bool_val_name = self.add_temp(Bool)
+        stmts.push(Let(bool_val_name, Bool, Bool(b)))
+        let cond_name = self.add_temp(Bool)
         stmts.push(
-          Let(
-            field_val_name,
-            field_ty,
-            FieldAccess(variant_struct_name, field_name),
-          ),
-        )
-        let bool_val_name = self.add_temp(Type::Bool)
-        stmts.push(Let(bool_val_name, Type::Bool, KnfExpr::Bool(b)))
-        let cond_name = self.add_temp(Type::Bool)
-        stmts.push(
-          Let(cond_name, Type::Bool, Binary(Eq, field_val_name, bool_val_name)),
+          Let(cond_name, Bool, Binary(Eq, field_val_name, bool_val_name)),
         )
         conditions.push(cond_name)
       }
       Integer(n) => {
-        // Extract field and check equality
-        let field_val_name = self.add_temp(field_ty)
-        stmts.push(
-          Let(
-            field_val_name,
-            field_ty,
-            FieldAccess(variant_struct_name, field_name),
-          ),
-        )
+        // Check equality
         let int_val_name = self.add_temp(Type::Int)
         stmts.push(Let(int_val_name, Type::Int, KnfExpr::Int(n)))
         let cond_name = self.add_temp(Type::Bool)
@@ -565,12 +562,90 @@ fn Context::build_enum_pattern_condition(
         )
         conditions.push(cond_name)
       }
-      _ => {
-        let pat_str = sub_pat.kind.to_string()
-        let pat_str = @color.strip_color(pat_str)
-        raise KnfTransformError(
-          "Unsupported sub-pattern in enum match: \{pat_str}",
+      Tuple(_) => {
+        guard field_ty is Tuple(nested_types) else {
+          raise KnfTransformError(
+            "Type mismatch: expected Tuple type for nested tuple pattern",
+          )
+        }
+        let nested_elem_names : Array[Name] = []
+        for j, nested_type in nested_types {
+          let nested_name = self.add_temp(nested_type)
+          stmts.push(Let(nested_name, nested_type, TupleAccess(field_val_name, j)))
+          nested_elem_names.push(nested_name)
+        }
+        let (nested_stmts, nested_cond_opt, nested_bindings) = 
+        self.build_tuple_pattern_condition(
+          sub_pat, nested_elem_names, nested_types,
         )
+        stmts.append(nested_stmts)
+        if nested_cond_opt is Some(cond) {
+          conditions.push(cond)
+        }
+        bindings.append(nested_bindings)
+      }
+      EnumVariant(_enum_tag, nested_variant_name, nested_sub_patterns) => {
+        // Nested enum pattern - need to check tag and unbox
+        guard field_ty is Union(enum_name) else {
+          raise KnfTransformError(
+            "Type mismatch: expected Enum type for nested enum pattern",
+          )
+        }
+        // Get the tag of the nested enum value
+        let nested_tag_name = self.add_temp(Type::Int)
+        stmts.push(
+          Let(nested_tag_name, Type::Int, GetUnionTag(field_val_name)),
+        )
+
+        // Find the variant index
+        guard self.unions.get(enum_name) is Some(variant_names) else {
+          raise KnfTransformError("Enum \{enum_name} not found in unions")
+        }
+        let nested_variant_full_name = "\{enum_name}$\{nested_variant_name}"
+        let variant_index = match
+          variant_names.search_by(fn(v) { v == nested_variant_full_name }) {
+          Some(idx) => idx
+          None =>
+            raise KnfTransformError(
+              "Variant \{nested_variant_name} not found in enum \{enum_name}",
+            )
+        }
+
+        // Check if tag matches
+        let expected_tag_name = self.add_temp(Type::Int)
+        stmts.push(
+          Let(expected_tag_name, Type::Int, KnfExpr::Int(variant_index)),
+        )
+        let tag_cond_name = self.add_temp(Type::Bool)
+        stmts.push(
+          Let(
+            tag_cond_name,
+            Type::Bool,
+            Binary(Eq, nested_tag_name, expected_tag_name),
+          ),
+        )
+        conditions.push(tag_cond_name)
+
+        // Reinterpret as specific variant and process nested patterns
+        let nested_variant_struct_name = self.add_temp(
+          Struct(nested_variant_full_name),
+        )
+        stmts.push(
+          Let(
+            nested_variant_struct_name,
+            Struct(nested_variant_full_name),
+            ReInterpretUnion(nested_variant_full_name, field_val_name),
+          ),
+        )
+
+        // Recursively process nested enum patterns
+        let (nested_cond_opt, nested_bindings) = self.build_enum_pattern_condition(
+          nested_sub_patterns, nested_variant_struct_name, nested_variant_full_name,
+        )
+        if nested_cond_opt is Some(cond) {
+          conditions.push(cond)
+        }
+        bindings.append(nested_bindings)
       }
     }
   }
