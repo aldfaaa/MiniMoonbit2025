@@ -147,6 +147,10 @@ pub fn parse_pattern(
       let pattern = Pattern::{ kind: Ident(ident) }
       (pattern, tokens)
     }
+    [{ kind: BinaryOp(Sub), ..}, { kind: Int(v), .. }, .. tokens] => {
+      let pattern = Pattern::{ kind: Integer(-v) }
+      (pattern, tokens)
+    }
     [{ kind: Int(v), .. }, .. tokens] => {
       let pattern = Pattern::{ kind: Integer(v) }
       (pattern, tokens)
