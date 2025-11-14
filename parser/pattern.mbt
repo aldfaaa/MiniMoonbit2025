@@ -147,7 +147,7 @@ pub fn parse_pattern(
       let pattern = Pattern::{ kind: Ident(ident) }
       (pattern, tokens)
     }
-    [{ kind: BinaryOp(Sub), ..}, { kind: Int(v), .. }, .. tokens] => {
+    [{ kind: BinaryOp(Sub), .. }, { kind: Int(v), .. }, .. tokens] => {
       let pattern = Pattern::{ kind: Integer(-v) }
       (pattern, tokens)
     }
@@ -179,7 +179,16 @@ pub fn parse_pattern(
       let tokens = loop tokens {
         [{ kind: Bracket(')'), .. }, .. tokens] => break tokens
         [
-          { kind: Int(_) | Lower(_) | Wildcard | Bracket('(') | Upper(_), .. },
+          {
+            kind: Int(_)
+            | BinaryOp(Sub)
+            | Lower(_)
+            | Wildcard
+            | Bracket('(')
+            | Upper(_)
+            | Bool(_),
+            ..,
+          },
           ..,
         ] as tokens => {
           let (pat, rest) = parse_pattern(tokens)
@@ -190,11 +199,13 @@ pub fn parse_pattern(
           { kind: Symbol(","), .. },
           {
             kind: Int(_)
+            | BinaryOp(Sub)
             | Lower(_)
             | Wildcard
             | Bracket('(')
             | Bracket(')')
-            | Upper(_),
+            | Upper(_)
+            | Bool(_),
             ..,
           },
           ..,
@@ -225,6 +236,7 @@ pub fn parse_pattern(
             | Bracket('(')
             | Upper(_)
             | Int(_)
+            | BinaryOp(Sub)
             | Bool(_),
             ..,
           },
@@ -243,6 +255,7 @@ pub fn parse_pattern(
             | Bracket(')')
             | Upper(_)
             | Int(_)
+            | BinaryOp(Sub)
             | Bool(_),
             ..,
           },
