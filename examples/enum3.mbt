@@ -1,5 +1,3 @@
-extern "C" fn print_int(value: Int) -> Unit = "print_int";
-
 enum List {
   Nil;
   Cons(Int, List);
@@ -183,16 +181,16 @@ fn main {
   list = remove(list, 20);
   let r12 = bool_to_int(contains(list, 20));
 
-  print_int(r1);
-  print_int(r2);
-  print_int(r3);
-  print_int(r4);
-  print_int(r5);
-  print_int(r6);
-  print_int(r7);
-  print_int(r8);
-  print_int(r9);
-  print_int(r10);
-  print_int(r11);
-  print_int(r12);
+  println(r1);
+  println(r2);
+  println(r3);
+  println(r4);
+  println(r5);
+  println(r6);
+  println(r7);
+  println(r8);
+  println(r9);
+  println(r10);
+  println(r11);
+  println(r12);
 }

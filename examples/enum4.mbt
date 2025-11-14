@@ -3,44 +3,44 @@ fn myprint_int(i: Int) -> Unit {
 }
 
 enum AVLNode {
-  Empty;
-  Node(Int, Int, AVLNode, AVLNode);
+  Empty
+  Node(Int, Int, AVLNode, AVLNode)
 }
 
 fn print_top_element(node : AVLNode, print_func: (Int) -> Unit, default_func: (Unit) -> Unit) -> Unit {
   match node {
-    Empty => default_func(());
-    Node(value, _, _, _) => print_func(value);
+    Empty => default_func(())
+    Node(value, _, _, _) => print_func(value)
   }
 }
 
 fn height(node : AVLNode) -> Int {
   match node {
-    Empty => 0;
-    Node(_, h, _, _) => h;
+    Empty => 0
+    Node(_, h, _, _) => h
   }
 }
 
 fn balance_factor(node : AVLNode) -> Int {
   match node {
-    Empty => 0;
-    Node(_, _, left, right) => height(left) - height(right);
+    Empty => 0
+    Node(_, _, left, right) => height(left) - height(right)
   }
 }
 
 fn update_height(value : Int, left : AVLNode, right : AVLNode) -> AVLNode {
-  let left_height = height(left);
-  let right_height = height(right);
+  let left_height = height(left)
+  let right_height = height(right)
   let max_height = if left_height > right_height { left_height } else { right_height };
-  let new_height = 1 + max_height;
-  Node(value, new_height, left, right);
+  let new_height = 1 + max_height
+  Node(value, new_height, left, right)
 }
 
 fn rotate_right(node : AVLNode) -> AVLNode {
   match node {
     Node(y, _, Node(x, _, a, b), c) => {
-      let new_y = update_height(y, b, c);
-      update_height(x, a, new_y);
+      let new_y = update_height(y, b, c)
+      update_height(x, a, new_y)
     };
     _ => node;
   }
