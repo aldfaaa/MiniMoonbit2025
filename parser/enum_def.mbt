@@ -62,11 +62,18 @@ pub fn parse_enum_field(
   tokens : ArrayView[Token],
 ) -> (EnumField, ArrayView[Token]) raise ParseError {
   guard tokens is [{ kind: Upper(name), .. } as name_tok, .. tokens] else {
-    raise ParseError("Expected enum field name")
+    raise ParseError("Expected enum field name, while got \{tokens[0].kind}, \{tokens[1].kind}...")
   }
   let types : Array[Type] = Array::new()
   let mut last_tok = Some(name_tok)
   guard tokens is [{ kind: Bracket('('), .. }, .. rest] else {
+    let tokens = if tokens is [{ kind: Symbol(";"), .. }, .. rest] {
+      rest
+    } else if tokens is [tok, ..] && tok.line != name_tok.line {
+      tokens
+    } else {
+      tokens
+    }
     return (EnumField::{ name, types }, tokens)
   }
   let rest = loop rest {
