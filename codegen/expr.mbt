@@ -807,6 +807,37 @@ pub fn Context::expr_codegen(
       }
       Some(v)
     }
+    GetUnionTag(union_name) => {
+      // Get the tag from the first field (index 0) of the union struct
+      let union_value = self.get_value_by_name_or_load(union_name)
+      let zero = self.llvm_ctx.getConstInt32(0)
+
+      // Create a struct type with a single i32 field (the tag)
+      let tag_struct_ty = self.llvm_ctx.getStructType([
+        self.llvm_ctx.getInt32Ty(),
+      ])
+
+      // GEP to get pointer to the tag field
+      let tag_ptr = self.builder.createGEP(union_value, tag_struct_ty, [
+        zero, zero,
+      ])
+
+      // Load the tag value
+      let tag_value = self.builder.createLoad(
+        self.llvm_ctx.getInt32Ty(),
+        tag_ptr,
+      )
+      Some(tag_value)
+    }
+    ReInterpretUnion(_variant_name, union_name) => {
+      // Since unions and structs are both pointers in our representation,
+      // we just return the union pointer as is (no actual reinterpretation needed)
+      // The type system will ensure correctness
+      let union_value = self.get_value_by_name_or_load(union_name)
+      Some(union_value)
+    }
+    Switch(cond_name, cases, default_block) =>
+      self.switch_codegen(cond_name, cases, default_block)
     e => raise CodegenError("Unsupported expression in codegen: \{e}")
   }
 }

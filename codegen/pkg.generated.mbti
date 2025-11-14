@@ -62,6 +62,7 @@ fn Context::new(String) -> Self
 fn Context::set_new_name_knf_type(Self) -> Unit
 fn Context::set_new_name_value(Self) -> Unit
 fn Context::stmt_codegen(Self, @knf.KnfStmt) -> Unit raise
+fn Context::switch_codegen(Self, @knf.Name, Array[(Int, @knf.KnfBlock)], @knf.KnfBlock) -> &@IR.Value? raise
 fn Context::top_function_codegen(Self, @knf.KnfFunction) -> @IR.Function raise
 fn Context::top_let_codegen(Self, @knf.KnfTopLet) -> &@IR.Value raise
 fn Context::type_codegen_concrete(Self, @knf.Type) -> &@IR.Type raise

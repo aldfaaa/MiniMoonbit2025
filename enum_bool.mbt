@@ -1,5 +1,5 @@
 
-fn print_bool(v: Bool) -> Unit {
+fn print_bool_value(v: Bool) -> Unit {
   match v {
     true => println("It's true!")
     false => println("It's false!")
@@ -7,6 +7,6 @@ fn print_bool(v: Bool) -> Unit {
 }
 
 fn main {
-  print_bool(true)
-  print_bool(false)
+  print_bool_value(true)
+  print_bool_value(false)
 }
