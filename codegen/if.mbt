@@ -88,10 +88,11 @@ pub fn Context::if_codegen(
       (true, false) =>
         // Only else branch reaches merge, no PHI needed
         else_value
-      (true, true) => {
+      (true, true) =>
         // Both terminated, should have been caught above
-        raise CodegenError("Internal error: both branches terminated but not caught")
-      }
+        raise CodegenError(
+          "Internal error: both branches terminated but not caught",
+        )
     }
   } else {
     None

@@ -372,6 +372,15 @@ pub fn Context::match_enum_expr_to_knf(
     }
   }
 
+  // Build default block first (needed for case blocks with fallthrough)
+  let default_block = if default_arms.is_empty() {
+    // If all variants are covered in cases, create an empty default block
+    // The type checker should have already verified exhaustiveness
+    KnfBlock::{ stmts: [], ty: match_expr_ty }
+  } else {
+    self.build_default_arms_block(default_arms, enum_value_name, match_expr_ty)
+  }
+
   // Build switch cases
   let cases : Array[(Int, KnfBlock)] = []
   guard self.unions.get(enum_name) is Some(variant_names) else {
@@ -391,20 +400,12 @@ pub fn Context::match_enum_expr_to_knf(
       Some(arms) => {
         let case_block = self.build_enum_case_block(
           arms, enum_name, variant_name, variant_full_name, enum_value_name, match_expr_ty,
+          default_block,
         )
         cases.push((i, case_block))
       }
       None => ()
     }
-  }
-
-  // Build default block
-  let default_block = if default_arms.is_empty() {
-    // If all variants are covered in cases, create an empty default block
-    // The type checker should have already verified exhaustiveness
-    KnfBlock::{ stmts: [], ty: match_expr_ty }
-  } else {
-    self.build_default_arms_block(default_arms, enum_value_name, match_expr_ty)
   }
   (stmts, Switch(tag_name, cases, default_block))
 }
@@ -418,6 +419,7 @@ fn Context::build_enum_case_block(
   variant_full_name : String,
   enum_value_name : Name,
   result_ty : Type,
+  default_block : KnfBlock,
 ) -> KnfBlock raise KnfTransformError {
   let mut current_else_block : KnfBlock? = None
   for arm in arms.rev_iter() {
@@ -481,7 +483,8 @@ fn Context::build_enum_case_block(
     }
     let else_block = match current_else_block {
       Some(blk) => blk
-      None => KnfBlock::{ stmts: [], ty: result_ty }
+      // Use default block as fallback when no other arms are left
+      None => default_block
     }
 
     // Combine pattern condition and guard
