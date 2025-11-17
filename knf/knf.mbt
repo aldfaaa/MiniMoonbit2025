@@ -11,7 +11,7 @@ pub(all) struct KnfProgram {
 
 ///|
 pub impl Show for KnfProgram with output(self, logger) {
-  logger.write_string("KnfProgram: \{self.source_file}\n")
+  logger.write_string(";; KnfProgram: \{self.source_file}\n\n")
   for _, struct_def in self.struct_defs {
     logger.write_object(struct_def)
     logger.write_char('\n')

@@ -55,13 +55,13 @@ pub fn ExternFunction::to_string(self : Self, color? : Bool = true) -> String {
   }
 
   // Format FFI name
-  let ffi_text = "ffi: \"\{self.ffi_name}\""
+  let ffi_text = "ffi: \"\{self.ffi_name}\"\n"
   let ffi_formatted = format_lines(
     [ffi_text],
     head_with="└-",
     continue_with="  ",
   )
-  result = "\{result}\n\{ffi_formatted}"
+  result = "\{result}\n\{ffi_formatted}\n"
   result
 }
 
