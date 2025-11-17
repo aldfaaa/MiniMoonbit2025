@@ -1,5 +1,7 @@
-
-fn get_builtin_functions(llvm_ctx: @llvm.Context) -> Map[String, @llvm.FunctionType] {
+///|
+fn get_builtin_functions(
+  llvm_ctx : @llvm.Context,
+) -> Map[String, @llvm.FunctionType] {
   let i32ty = llvm_ctx.getInt32Ty()
   let i64ty = llvm_ctx.getInt64Ty()
   let i8ty = llvm_ctx.getInt8Ty()
