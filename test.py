@@ -243,12 +243,15 @@ def print_help():
 选项:
     --target=BACKEND    指定测试的后端，可以使用多次
                         可选值: llvm, aarch64, riscv64, all
+    -f FILE             指定要测试的单个文件
     --help, -h          显示此帮助信息
 
 示例:
-    python test2.py --target=llvm
-    python test2.py --target=aarch64 --target=riscv64
-    python test2.py --target=all
+    python test.py --target=llvm
+    python test.py --target=aarch64 --target=riscv64
+    python test.py --target=all
+    python test.py -f examples/ack.mbt --target=all
+    python test.py -f examples/fib.mbt --target=aarch64
 """
     print(help_text)
 
@@ -261,12 +264,14 @@ def main():
     
     # 解析命令行参数
     targets = []
-    for arg in sys.argv[1:]:
+    test_file_path = None
+    i = 1
+    while i < len(sys.argv):
+        arg = sys.argv[i]
         if arg.startswith('--target='):
             target = arg.split('=', 1)[1]
             if target == 'all':
                 targets = ['llvm', 'aarch64', 'riscv64']
-                break
             elif target in ['llvm', 'aarch64', 'riscv64']:
                 if target not in targets:
                     targets.append(target)
@@ -274,6 +279,15 @@ def main():
                 print(f"{Colors.RED}错误: 未知的目标 '{target}'{Colors.END}")
                 print_help()
                 return 1
+        elif arg == '-f':
+            if i + 1 < len(sys.argv):
+                test_file_path = sys.argv[i + 1]
+                i += 1
+            else:
+                print(f"{Colors.RED}错误: -f 选项需要指定文件路径{Colors.END}")
+                print_help()
+                return 1
+        i += 1
     
     if not targets:
         print(f"{Colors.RED}错误: 未指定测试目标{Colors.END}")
@@ -281,10 +295,6 @@ def main():
         return 1
     
     # 检查必要的文件和目录
-    if not os.path.exists("examples"):
-        print(f"{Colors.RED}错误: 找不到 examples 目录{Colors.END}")
-        return 1
-    
     if not os.path.exists("ans"):
         print(f"{Colors.RED}错误: 找不到 ans 目录{Colors.END}")
         return 1
@@ -293,12 +303,25 @@ def main():
         print(f"{Colors.RED}错误: 找不到 runtime.c 文件{Colors.END}")
         return 1
     
-    # 获取所有 .mbt 文件
-    mbt_files = sorted(glob.glob("examples/*.mbt"))
-    
-    if not mbt_files:
-        print(f"{Colors.YELLOW}警告: examples 目录下没有 .mbt 文件{Colors.END}")
-        return 0
+    # 获取要测试的 .mbt 文件
+    if test_file_path:
+        # 测试单个文件
+        if not os.path.exists(test_file_path):
+            print(f"{Colors.RED}错误: 找不到文件 '{test_file_path}'{Colors.END}")
+            return 1
+        if not test_file_path.endswith('.mbt'):
+            print(f"{Colors.RED}错误: 文件必须是 .mbt 文件{Colors.END}")
+            return 1
+        mbt_files = [test_file_path]
+    else:
+        # 测试所有文件
+        if not os.path.exists("examples"):
+            print(f"{Colors.RED}错误: 找不到 examples 目录{Colors.END}")
+            return 1
+        mbt_files = sorted(glob.glob("examples/*.mbt"))
+        if not mbt_files:
+            print(f"{Colors.YELLOW}警告: examples 目录下没有 .mbt 文件{Colors.END}")
+            return 0
     
     print(f"{Colors.BOLD}测试后端: {', '.join(targets)}{Colors.END}")
     print(f"测试文件: {len(mbt_files)} 个\n")
