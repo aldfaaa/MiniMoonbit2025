@@ -749,6 +749,16 @@ fn handle_primitive_method_call(
             ty: TypeKind::Int,
             toks,
           })
+        "reinterpret_as_uint" =>
+          Some(ApplyExpr::{
+            kind: AtomExpr(AtomExpr::{
+              kind: AtomExprKind::BitCast(TypeKind::UInt, base_as_expr),
+              ty: TypeKind::UInt,
+              toks,
+            }),
+            ty: TypeKind::UInt,
+            toks,
+          })
         "to_string" => {
           let to_string_func = ApplyExpr::{
             kind: AtomExpr(AtomExpr::{
@@ -797,6 +807,16 @@ fn handle_primitive_method_call(
               toks,
             }),
             ty: TypeKind::Int64,
+            toks,
+          })
+        "reinterpret_as_uint64" =>
+          Some(ApplyExpr::{
+            kind: AtomExpr(AtomExpr::{
+              kind: AtomExprKind::BitCast(TypeKind::UInt64, base_as_expr),
+              ty: TypeKind::UInt64,
+              toks,
+            }),
+            ty: TypeKind::UInt64,
             toks,
           })
         "to_string" => {

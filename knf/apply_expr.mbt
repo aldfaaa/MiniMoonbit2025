@@ -81,6 +81,7 @@ fn handle_primitive_conversion(
             Call(Name::{ id: "__builtin_float_to_string", slot: 0 }, [base_name]),
           )
         "reinterpret_as_int" => Some(BitCast(Int, base_name))
+        "reinterpret_as_uint" => Some(BitCast(UInt, base_name))
         _ => None
       }
     // Double conversions
@@ -98,6 +99,7 @@ fn handle_primitive_conversion(
             ]),
           )
         "reinterpret_as_int64" => Some(BitCast(Int64, base_name))
+        "reinterpret_as_uint64" => Some(BitCast(UInt64, base_name))
         _ => None
       }
     // Char conversions
