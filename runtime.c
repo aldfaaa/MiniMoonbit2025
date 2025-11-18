@@ -519,13 +519,13 @@ MoonBitStr* __builtin_uint64_to_string(uint64_t value) {
 
 MoonBitStr* __builtin_float_to_string(float value) {
   char buffer[64];
-  snprintf(buffer, sizeof(buffer), "%g", value);
+  snprintf(buffer, sizeof(buffer), "%.17g", value);
   return __builtin_create_string(buffer);
 }
 
 MoonBitStr* __builtin_double_to_string(double value) {
   char buffer[64];
-  snprintf(buffer, sizeof(buffer), "%g", value);
+  snprintf(buffer, sizeof(buffer), "%.9g", value);
   return __builtin_create_string(buffer);
 }
 

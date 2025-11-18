@@ -7,4 +7,4 @@ length of v1 = 5
 v1 . v2 = 11
 v1 x v2 = 2
 normalized v1 = (0.6, 0.8)
-distance between v1 and v2 = 2.82843
+distance between v1 and v2 = 2.82842712
