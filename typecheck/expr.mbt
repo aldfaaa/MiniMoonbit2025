@@ -303,8 +303,8 @@ pub fn Context::check_expr(self : Self, expr : @parser.Expr) -> Expr {
           self.throw_(expr.toks[0], msg, Error)
         }
         let ty = self.ensure_type(checked_left.ty)
-        if !(ty is (Int | Int64 | TypeVar(_))) {
-          let msg = "Operands of bitwise AND/OR operation must be of type Int or Int64" +
+        if !(ty is (Int | Int64 | UInt | UInt64 | TypeVar(_))) {
+          let msg = "Operands of bitwise AND/OR operation must be of type Int, UInt, Int64, UInt64" +
             " while got \{ty}"
           self.throw_(expr.toks[0], msg, Error)
         }
