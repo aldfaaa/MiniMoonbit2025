@@ -145,6 +145,74 @@ Consider the `examples/fib.mbt` file.
             └-int literal 2 (Int)
     ```
 
+*   **Print KNF:**
+    ```sh
+    moon run main -- examples/fib.mbt --print-knf
+    ```
+    This shows the k normal form:
+    ```plaintext
+    ;; KnfProgram: examples/fib.mbt
+
+    fn fib(n: Int) -> Int {
+      let tmp : Int = 1;
+      if n <= tmp {
+        return n;
+      };
+      let tmp$1 : Int = 1;
+      let tmp$2 : Int = n - tmp$1;
+      let tmp$3 : Int = 2;
+      let tmp$4 : Int = n - tmp$3;
+      let tmp$5 : Int = fib(tmp$2);
+      let tmp$6 : Int = fib(tmp$4);
+      tmp$5 + tmp$6;
+    }
+    fn main {
+      let tmp : Int = 10;
+      let result : Int = fib(tmp);
+      print_int(result);
+    }
+    ```
+
+*   **Error recovery:**
+    MiniMoonBit Compiler supporr error recovery, take `err.mbt` as example:
+    ```sh
+    moon run main -- err.mbt
+    ```
+    You will see:
+    ```plaintext
+    [err.mbt:10:7] Warning:
+    9|  let y = x + true;
+    10|  let (x) = 5;
+    11|      ^ Warning: Should Not use tuple pattern for single pattern
+
+    [err.mbt:8:15] Error:
+    7|fn main {
+    8|  let mut x = 8 + 1.0;
+    9|              ^ TypeMismatch: Binary Expression Must have same type for both side while got Int and Double
+
+    [err.mbt:9:12] Error:
+    8|  let mut x = 8 + 1.0;
+    9|  let y = x + true;
+    10|           ^ TypeMismatch: Binary Expression Must have same type for both side while got Int and Bool
+
+    [err.mbt:14:10] Error:
+    13|
+    14|  match a {
+    15|         ^ Non-exhaustive match expression, some patterns are not covered:
+    RGB(_, _, _)
+    RGB(255, _, _)
+    RGB(255, 0, _)
+    RGBA(_, _, _, _)
+    RGBA(255, _, _, _)
+    ... and 2 more patterns
+
+    [err.mbt:20:9] Error:
+    19|
+    20|  return false;
+    21|        ^ Return type mismatch, wanted: Unit, got: Bool
+
+    Compilation Error: TypeCheckError("Type checking failed.")
+    ```
 ---
 
 <a name="中文"></a>
@@ -168,6 +236,7 @@ Consider the `examples/fib.mbt` file.
 - **丰富的语言子集**: 支持基本运算、控制流、字符串、数组、结构体、代数数据类型（ADT）和模式匹配。
 - **开发者友好的诊断信息**: 具备简单的错误恢复机制和模式匹配的完备性检查，以改善开发体验。
 - **内部状态检视工具**: 提供多种标志位，用于打印词法分析、抽象语法树（AST）、类型化抽象语法树和 K范式（KNF）等中间表示，便于调试和学习。
+- **功能完备**: 可以编译如光线追踪这样的中型程序。
 
 ## 环境准备
 
@@ -294,4 +363,73 @@ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser; irm https://cli.moonbitlang
           └-binary expr: - (Int)
             ├-variable n (Int)
             └-int literal 2 (Int)
+    ```
+
+*   **打印KNF:**
+    ```sh
+    moon run main -- examples/fib.mbt --print-knf
+    ```
+    这将显示代码的KNF表示：
+    ```plaintext
+    ;; KnfProgram: examples/fib.mbt
+
+    fn fib(n: Int) -> Int {
+      let tmp : Int = 1;
+      if n <= tmp {
+        return n;
+      };
+      let tmp$1 : Int = 1;
+      let tmp$2 : Int = n - tmp$1;
+      let tmp$3 : Int = 2;
+      let tmp$4 : Int = n - tmp$3;
+      let tmp$5 : Int = fib(tmp$2);
+      let tmp$6 : Int = fib(tmp$4);
+      tmp$5 + tmp$6;
+    }
+    fn main {
+      let tmp : Int = 10;
+      let result : Int = fib(tmp);
+      print_int(result);
+    }
+    ```
+
+*   **错误恢复与处理:**
+    MiniMoonBit支持一定的错误处理，当代码存在语法错误时，编译器会试图进行错误恢复，以根目录下的err.mbt为例子。
+    ```sh
+    moon run main -- err.mbt
+    ```
+    你将会在终端中看到以下错误信息：
+    ```plaintext
+    [err.mbt:10:7] Warning:
+    9|  let y = x + true;
+    10|  let (x) = 5;
+    11|      ^ Warning: Should Not use tuple pattern for single pattern
+
+    [err.mbt:8:15] Error:
+    7|fn main {
+    8|  let mut x = 8 + 1.0;
+    9|              ^ TypeMismatch: Binary Expression Must have same type for both side while got Int and Double
+
+    [err.mbt:9:12] Error:
+    8|  let mut x = 8 + 1.0;
+    9|  let y = x + true;
+    10|           ^ TypeMismatch: Binary Expression Must have same type for both side while got Int and Bool
+
+    [err.mbt:14:10] Error:
+    13|
+    14|  match a {
+    15|         ^ Non-exhaustive match expression, some patterns are not covered:
+    RGB(_, _, _)
+    RGB(255, _, _)
+    RGB(255, 0, _)
+    RGBA(_, _, _, _)
+    RGBA(255, _, _, _)
+    ... and 2 more patterns
+
+    [err.mbt:20:9] Error:
+    19|
+    20|  return false;
+    21|        ^ Return type mismatch, wanted: Unit, got: Bool
+
+    Compilation Error: TypeCheckError("Type checking failed.")
     ```
