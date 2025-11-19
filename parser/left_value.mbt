@@ -78,6 +78,7 @@ pub fn parse_left_value(
   tokens : ArrayView[Token],
 ) -> (LeftValue, ArrayView[Token]) raise ParseError {
   guard tokens is [{ kind: Lower(ident), .. }, .. tokens] else {
+    @lexer.throw_(tokens[0], "Expect a lower ident", Error)
     raise ParseError("Expect a lower ident")
   }
   let left_value = LeftValue::{ kind: LeftValueKind::Ident(ident) }

@@ -151,6 +151,7 @@ pub fn parse_top_function(
     ("", tokens)
   }
   guard tokens is [{ kind: Lower(fname), .. }, .. tokens] else {
+    @lexer.throw_(tokens[0], "Expect a lower ident as function name", Error)
     raise ParseError("Expect a lower ident")
   }
   let (param_list, ret_ty, tokens) = if !(fname is "main") {
